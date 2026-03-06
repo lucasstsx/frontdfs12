@@ -1,9 +1,12 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router';
+import { CadastroForm } from "#/components/cadastro-form";
 
-export const Route = createFileRoute('/auth/_auth/cadastro')({
-  component: RouteComponent,
-})
+export const Route = createFileRoute("/auth/_auth/cadastro")({
+  component: CadastroPage,
+});
 
-function RouteComponent() {
-  return <div>Hello "/auth/_auth/cadastro"!</div>
+function CadastroPage() {
+  return(
+    <CadastroForm></CadastroForm>
+  )
 }
