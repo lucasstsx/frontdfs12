@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { Footer } from "#/components/Footer";
 import {
 	HeaderActions,
 	HeaderContent,
@@ -29,6 +30,7 @@ function AuthLayout() {
 					<Outlet />
 				</div>
 			</main>
+			<Footer></Footer>
 		</div>
 	);
 }

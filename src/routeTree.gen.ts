@@ -13,6 +13,7 @@ import { Route as SiteRouteImport } from './routes/_site'
 import { Route as SiteIndexRouteImport } from './routes/_site/index'
 import { Route as AuthAuthRouteImport } from './routes/auth/_auth'
 import { Route as AuthAuthLoginRouteImport } from './routes/auth/_auth/login'
+import { Route as AuthAuthCadastroRouteImport } from './routes/auth/_auth/cadastro'
 
 const SiteRoute = SiteRouteImport.update({
   id: '/_site',
@@ -33,15 +34,22 @@ const AuthAuthLoginRoute = AuthAuthLoginRouteImport.update({
   path: '/login',
   getParentRoute: () => AuthAuthRoute,
 } as any)
+const AuthAuthCadastroRoute = AuthAuthCadastroRouteImport.update({
+  id: '/cadastro',
+  path: '/cadastro',
+  getParentRoute: () => AuthAuthRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof SiteIndexRoute
   '/auth': typeof AuthAuthRouteWithChildren
+  '/auth/cadastro': typeof AuthAuthCadastroRoute
   '/auth/login': typeof AuthAuthLoginRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthAuthRouteWithChildren
   '/': typeof SiteIndexRoute
+  '/auth/cadastro': typeof AuthAuthCadastroRoute
   '/auth/login': typeof AuthAuthLoginRoute
 }
 export interface FileRoutesById {
@@ -49,14 +57,21 @@ export interface FileRoutesById {
   '/_site': typeof SiteRouteWithChildren
   '/auth/_auth': typeof AuthAuthRouteWithChildren
   '/_site/': typeof SiteIndexRoute
+  '/auth/_auth/cadastro': typeof AuthAuthCadastroRoute
   '/auth/_auth/login': typeof AuthAuthLoginRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/auth/login'
+  fullPaths: '/' | '/auth' | '/auth/cadastro' | '/auth/login'
   fileRoutesByTo: FileRoutesByTo
-  to: '/auth' | '/' | '/auth/login'
-  id: '__root__' | '/_site' | '/auth/_auth' | '/_site/' | '/auth/_auth/login'
+  to: '/auth' | '/' | '/auth/cadastro' | '/auth/login'
+  id:
+    | '__root__'
+    | '/_site'
+    | '/auth/_auth'
+    | '/_site/'
+    | '/auth/_auth/cadastro'
+    | '/auth/_auth/login'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -94,6 +109,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAuthLoginRouteImport
       parentRoute: typeof AuthAuthRoute
     }
+    '/auth/_auth/cadastro': {
+      id: '/auth/_auth/cadastro'
+      path: '/cadastro'
+      fullPath: '/auth/cadastro'
+      preLoaderRoute: typeof AuthAuthCadastroRouteImport
+      parentRoute: typeof AuthAuthRoute
+    }
   }
 }
 
@@ -108,10 +130,12 @@ const SiteRouteChildren: SiteRouteChildren = {
 const SiteRouteWithChildren = SiteRoute._addFileChildren(SiteRouteChildren)
 
 interface AuthAuthRouteChildren {
+  AuthAuthCadastroRoute: typeof AuthAuthCadastroRoute
   AuthAuthLoginRoute: typeof AuthAuthLoginRoute
 }
 
 const AuthAuthRouteChildren: AuthAuthRouteChildren = {
+  AuthAuthCadastroRoute: AuthAuthCadastroRoute,
   AuthAuthLoginRoute: AuthAuthLoginRoute,
 }
 
