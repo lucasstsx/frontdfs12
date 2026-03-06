@@ -6,7 +6,5 @@ export const Route = createFileRoute("/auth/_auth/login")({
 });
 
 function LoginPage() {
-	return (
-		<LoginForm></LoginForm>
-	)
+	return <LoginForm />;
 }
