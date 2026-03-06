@@ -1,4 +1,4 @@
-import { createRootRoute, Outlet } from "@tanstack/react-router";
+import { createRootRoute, Outlet, useLocation } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
 import { Header } from "../components/Header";
@@ -28,10 +28,13 @@ export const Route = createRootRoute({
 });
 
 function RootComponent() {
+	const location = useLocation();
+	const isAuthPage = location.pathname.startsWith("/auth");
+
 	return (
 		<>
 			<div className="flex min-h-screen flex-col bg-background text-foreground">
-				<Header />
+				{!isAuthPage && <Header />}
 
 				<main className="flex-1">
 					<Outlet />
