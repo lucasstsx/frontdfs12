@@ -35,7 +35,13 @@ const steps: {
 export function ComoFuncionaSection() {
 	return (
 		<SectionWrapper id="como-funciona" className="bg-card">
-			<motion.div className="mb-12 text-center" initial={{ opacity: 1, y: 0 }}>
+			<motion.div
+				className="mb-12 text-center"
+				initial={{ opacity: 0, y: 20 }}
+				whileInView={{ opacity: 1, y: 0 }}
+				viewport={{ once: true }}
+				transition={{ duration: 0.6 }}
+			>
 				<span className="mb-3 inline-block rounded-full bg-secondary/30 px-4 py-1 text-sm font-semibold uppercase tracking-widest text-primary">
 					Como funciona?
 				</span>
@@ -49,7 +55,10 @@ export function ComoFuncionaSection() {
 					<motion.div
 						key={step.number}
 						className="relative flex flex-col items-center rounded-2xl border border-border bg-background p-8 text-center shadow-sm"
-						initial={{ opacity: 1, y: 0 }}
+						initial={{ opacity: 0, y: 20 }}
+						whileInView={{ opacity: 1, y: 0 }}
+						viewport={{ once: true }}
+						transition={{ duration: 0.5, delay: Number.parseInt(step.number) * 0.1 }}
 					>
 						<span className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-0.5 text-xs font-bold text-primary-foreground">
 							{step.number}
