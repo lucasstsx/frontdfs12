@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { Heart } from "lucide-react";
 import { useState } from "react";
 
 export function Header() {
@@ -9,7 +10,7 @@ export function Header() {
 			<div className="mx-auto max-w-7xl  lg:px-8">
 				<div className="flex h-20 px-4 sm:px-6 items-center justify-between">
 					<Link to="/" className="group flex items-center overflow-visible">
-						<span className="flex items-center text-1xl sm:text-2xl leading-none font-extrabold tracking-tighter text-white">
+						<span className="flex items-center text-1xl sm:text-2xl leading-none font-extrabold tracking-tighter text-primary-foreground">
 							Pessoa
 							<span className="relative mx-[-2px] flex h-6 w-6 sm:h-8 sm:w-8 translate-y-[3px] items-center justify-center overflow-visible">
 								<svg
@@ -28,10 +29,14 @@ export function Header() {
 									/>
 								</svg>
 								<span className="heart-pulse absolute flex items-center justify-center text-destructive opacity-0 transition-all duration-300 ease-in-out group-hover:scale-125 group-hover:opacity-100">
-									<i className="fa-solid fa-heart text-[20px]" />
+									<Heart
+										size={20}
+										aria-hidden="true"
+										className="fill-destructive"
+									/>
 								</span>
 							</span>
-							<span className="text-secondary transition-colors group-hover:text-white">
+							<span className="text-secondary transition-colors group-hover:text-primary-foreground">
 								onhecimentos
 							</span>
 						</span>
@@ -69,7 +74,7 @@ export function Header() {
 						<button
 							type="button"
 							onClick={() => setIsMobileMenuOpen((value) => !value)}
-							className="text-[#F8FAF8] hover:text-secondary"
+							className="text-primary-foreground hover:text-secondary"
 							aria-label="Abrir menu"
 						>
 							<svg
@@ -88,30 +93,38 @@ export function Header() {
 
 				{isMobileMenuOpen ? (
 					<div className="space-y-3 border-t border-secondary/20 bg-primary px-4 pt-2 pb-6 text-center shadow-inner md:hidden">
-						<a
-							href="#inicio"
+						<Link
+							to="/"
+							hash="inicio"
+							onClick={() => setIsMobileMenuOpen(false)}
 							className="block px-3 py-2 text-background hover:bg-secondary rounded-md font-medium"
 						>
 							Início
-						</a>
-						<a
-							href="#como-funciona"
+						</Link>
+						<Link
+							to="/"
+							hash="como-funciona"
+							onClick={() => setIsMobileMenuOpen(false)}
 							className="block px-3 py-2 text-background hover:bg-secondary rounded-md font-medium"
 						>
 							Como Funciona
-						</a>
-						<a
-							href="#ofertas"
+						</Link>
+						<Link
+							to="/"
+							hash="ofertas"
+							onClick={() => setIsMobileMenuOpen(false)}
 							className="block px-3 py-2 text-background hover:bg-secondary rounded-md font-medium"
 						>
 							Explorar
-						</a>
-						<a
-							href="#registro"
+						</Link>
+						<Link
+							to="/"
+							hash="registro"
+							onClick={() => setIsMobileMenuOpen(false)}
 							className="block text-center bg-destructive text-white px-3 py-3 rounded-md font-bold mt-4 mx-4"
 						>
 							Registar
-						</a>
+						</Link>
 					</div>
 				) : null}
 			</div>

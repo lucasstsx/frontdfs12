@@ -30,14 +30,15 @@ export const Route = createRootRoute({
 function RootComponent() {
 	return (
 		<>
-			<div className="min-h-screen flex flex-col bg-(--background) text-(--foreground)">
+			<div className="flex min-h-screen flex-col bg-background text-foreground">
 				<Header />
 
-				<main className="flex-1 px-4 py-10 sm:px-6 lg:px-8">
+				<main className="flex-1">
 					<Outlet />
 				</main>
+
+				<Footer />
 			</div>
-			<Footer>footer</Footer>
 			<TanStackRouterDevtools />
 		</>
 	);
