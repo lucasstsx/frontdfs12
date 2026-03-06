@@ -12,7 +12,6 @@ export function Logo({ className }: LogoProps) {
 			to="/"
 			className={cn("group flex items-center overflow-visible", className)}
 		>
-
 			<span className="flex items-center text-1xl sm:text-2xl leading-none font-extrabold tracking-tighter text-primary-foreground">
 				Pessoa
 				<span className="relative mx-[-2px] flex h-6 w-6 sm:h-8 sm:w-8 translate-y-[3px] items-center justify-center overflow-visible">

@@ -45,7 +45,7 @@ export function ComoFuncionaSection() {
 			</motion.div>
 
 			<div className="grid gap-8 md:grid-cols-3">
-				{steps.map((step, i) => (
+				{steps.map((step) => (
 					<motion.div
 						key={step.number}
 						className="relative flex flex-col items-center rounded-2xl border border-border bg-background p-8 text-center shadow-sm"

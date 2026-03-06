@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Facebook, Heart, Instagram, Linkedin, Twitter } from "lucide-react";
+import { Facebook, Instagram, Linkedin, Twitter } from "lucide-react";
 import { Logo } from "./Logo";
 
 const platformLinks = [
@@ -26,9 +26,7 @@ export function Footer() {
 			<div className="mx-auto grid max-w-5xl gap-10 sm:grid-cols-[1fr_auto_auto] lg:gap-16">
 				<div className="flex flex-col gap-4">
 					<div className="items-center gap-3 flex">
-						<Link to="/" className="group flex items-center overflow-visible">
-							<Logo />
-						</Link>
+						<Logo />
 					</div>
 					<p className="max-w-xs text-sm leading-relaxed text-primary-foreground/70">
 						Facilitando a conexão entre quem quer ensinar e quem quer aprender,
