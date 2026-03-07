@@ -78,6 +78,11 @@ function ConhecimentosPage() {
 	const createMutation = useMutation({
 		mutationFn: conhecimentosService.create.bind(conhecimentosService),
 		onSuccess: () => {
+			if (userToken?.id) {
+				queryClient.invalidateQueries({
+					queryKey: queryKeys.profile.byId(userToken.id),
+				});
+			}
 			queryClient.invalidateQueries({ queryKey: queryKeys.conhecimentos.all });
 			setIsCreateModalOpen(false);
 		},

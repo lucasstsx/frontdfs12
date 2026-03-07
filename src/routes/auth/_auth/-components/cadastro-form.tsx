@@ -1,7 +1,7 @@
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
-import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
 import { Button } from "#/components/ui/button";
@@ -21,56 +21,72 @@ import {
 	FieldSeparator,
 } from "#/components/ui/field";
 import { Input } from "#/components/ui/input";
-import { authService, type LoginResponse } from "#/lib/services/auth.service";
+import { authService, type UserProfile } from "#/lib/services/auth.service";
 import { cn } from "#/lib/utils";
 
-const loginSchema = z.object({
-	email: z.string().email("E-mail inválido"),
-	senha: z.string().min(1, "A senha é obrigatória"),
-});
+const cadastroSchema = z
+	.object({
+		nome: z.string().min(3, "O nome deve ter pelo menos 3 caracteres"),
+		email: z.string().email("E-mail invalido"),
+		telefone: z.string().min(10, "Informe um telefone valido"),
+		descricao: z
+			.string()
+			.max(160, "A descricao deve ter no maximo 160 caracteres"),
+		senha: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
+		confirmarSenha: z.string().min(1, "Confirme sua senha"),
+	})
+	.refine((data) => data.senha === data.confirmarSenha, {
+		message: "As senhas nao coincidem",
+		path: ["confirmarSenha"],
+	});
 
-export function LoginForm({
+type CadastroFormData = z.infer<typeof cadastroSchema>;
+
+export function CadastroForm({
 	className,
 	...props
 }: React.ComponentProps<"div">) {
 	const navigate = useNavigate();
-	const search = useSearch({ from: "/auth/_auth/login" }) as {
-		redirect?: string;
-		registered?: string;
-	};
 	const [error, setError] = useState<string | null>(null);
-	const showRegisteredSuccess = search.registered === "1";
 
-	const loginMutation = useMutation<
-		LoginResponse,
+	const registerMutation = useMutation<
+		UserProfile,
 		any,
-		z.infer<typeof loginSchema>
+		Omit<CadastroFormData, "confirmarSenha">
 	>({
-		mutationFn: (credentials) => authService.login(credentials),
-		onSuccess: (data) => {
-			authService.setToken(data.token);
-			const target = search.redirect || "/conhecimentos";
-			const safeTarget = target.startsWith("/") ? target : "/conhecimentos";
-			navigate({ to: safeTarget as any });
+		mutationFn: (payload) => authService.register(payload),
+		onSuccess: () => {
+			navigate({
+				to: "/auth/login",
+				search: {
+					registered: "1",
+				},
+			} as any);
 		},
 		onError: (err: any) => {
 			const message =
-				err.response?.data?.message || "E-mail ou senha inválidos.";
+				err.response?.data?.message ||
+				"Nao foi possivel concluir seu cadastro. Tente novamente.";
 			setError(message);
 		},
 	});
 
 	const form = useForm({
 		defaultValues: {
+			nome: "",
 			email: "",
+			telefone: "",
+			descricao: "",
 			senha: "",
+			confirmarSenha: "",
 		},
 		validators: {
-			onChange: loginSchema,
+			onChange: cadastroSchema,
 		},
 		onSubmit: async ({ value }) => {
 			setError(null);
-			loginMutation.mutate(value);
+			const { confirmarSenha: _, ...payload } = value;
+			registerMutation.mutate(payload);
 		},
 	});
 
@@ -79,22 +95,13 @@ export function LoginForm({
 			<Card>
 				<CardHeader className="text-center">
 					<CardTitle className="text-xl text-primary font-bold">
-						Vamos começar a aprender!
+						Crie sua conta
 					</CardTitle>
 					<CardDescription className="text-primary">
-						Acesse nossa comunidade feito por pessoas para pessoas!
+						E rapido e simples. Junte-se a nossa comunidade.
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
-					{showRegisteredSuccess && (
-						<div className="mb-6 p-4 rounded-xl bg-emerald-500/10 border-2 border-emerald-500/20 text-emerald-700 flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
-							<CheckCircle2 size={20} />
-							<p className="text-sm font-bold">
-								Cadastro realizado com sucesso! Agora faca seu login.
-							</p>
-						</div>
-					)}
-
 					{error && (
 						<div className="mb-6 p-4 rounded-xl bg-destructive/10 border-2 border-destructive/20 text-destructive flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
 							<AlertCircle size={20} />
@@ -191,6 +198,37 @@ export function LoginForm({
 								<span className="text-secondary">Ou continue com</span>
 							</FieldSeparator>
 
+							<form.Field name="nome">
+								{(field) => {
+									const isInvalid =
+										field.state.meta.isTouched && !field.state.meta.isValid;
+									return (
+										<Field data-invalid={isInvalid}>
+											<FieldLabel
+												htmlFor={field.name}
+												className="text-primary font-bold"
+											>
+												Nome
+											</FieldLabel>
+											<Input
+												id={field.name}
+												name={field.name}
+												type="text"
+												placeholder="Seu nome"
+												className="placeholder:text-secondary bg-white!"
+												value={field.state.value}
+												onBlur={field.handleBlur}
+												onChange={(e) => field.handleChange(e.target.value)}
+												aria-invalid={isInvalid}
+											/>
+											{isInvalid && (
+												<FieldError errors={field.state.meta.errors} />
+											)}
+										</Field>
+									);
+								}}
+							</form.Field>
+
 							<form.Field name="email">
 								{(field) => {
 									const isInvalid =
@@ -222,36 +260,121 @@ export function LoginForm({
 								}}
 							</form.Field>
 
+							<form.Field name="telefone">
+								{(field) => {
+									const isInvalid =
+										field.state.meta.isTouched && !field.state.meta.isValid;
+									return (
+										<Field data-invalid={isInvalid}>
+											<FieldLabel
+												htmlFor={field.name}
+												className="text-primary font-bold"
+											>
+												Numero do celular
+											</FieldLabel>
+											<Input
+												id={field.name}
+												name={field.name}
+												type="tel"
+												placeholder="(XX) XXXXX-XXXX"
+												className="placeholder:text-secondary bg-white!"
+												value={field.state.value}
+												onBlur={field.handleBlur}
+												onChange={(e) => field.handleChange(e.target.value)}
+												aria-invalid={isInvalid}
+											/>
+											{isInvalid && (
+												<FieldError errors={field.state.meta.errors} />
+											)}
+										</Field>
+									);
+								}}
+							</form.Field>
+
+							<form.Field name="descricao">
+								{(field) => {
+									const isInvalid =
+										field.state.meta.isTouched && !field.state.meta.isValid;
+									return (
+										<Field data-invalid={isInvalid}>
+											<FieldLabel
+												htmlFor={field.name}
+												className="text-primary font-bold"
+											>
+												Descricao
+											</FieldLabel>
+											<Input
+												id={field.name}
+												name={field.name}
+												type="text"
+												placeholder="Fale sobre sua profissao e interesses"
+												className="placeholder:text-secondary bg-white!"
+												value={field.state.value}
+												onBlur={field.handleBlur}
+												onChange={(e) => field.handleChange(e.target.value)}
+												aria-invalid={isInvalid}
+											/>
+											{isInvalid && (
+												<FieldError errors={field.state.meta.errors} />
+											)}
+										</Field>
+									);
+								}}
+							</form.Field>
+
 							<form.Field name="senha">
 								{(field) => {
 									const isInvalid =
 										field.state.meta.isTouched && !field.state.meta.isValid;
 									return (
 										<Field data-invalid={isInvalid}>
-											<div className="flex items-center">
-												<FieldLabel
-													htmlFor={field.name}
-													className="text-primary font-bold"
-												>
-													Senha
-												</FieldLabel>
-												<button
-													type="button"
-													className="ml-auto text-sm underline-offset-4 hover:underline text-primary bg-transparent border-none p-0 h-auto font-normal cursor-pointer"
-												>
-													Esqueceu a senha?
-												</button>
-											</div>
+											<FieldLabel
+												htmlFor={field.name}
+												className="text-primary font-bold"
+											>
+												Senha
+											</FieldLabel>
 											<Input
 												id={field.name}
 												name={field.name}
 												type="password"
+												placeholder="*******"
+												className="placeholder:text-secondary bg-white!"
 												value={field.state.value}
 												onBlur={field.handleBlur}
 												onChange={(e) => field.handleChange(e.target.value)}
 												aria-invalid={isInvalid}
-												className="placeholder:text-secondary bg-white!"
+											/>
+											{isInvalid && (
+												<FieldError errors={field.state.meta.errors} />
+											)}
+										</Field>
+									);
+								}}
+							</form.Field>
+
+							<form.Field name="confirmarSenha">
+								{(field) => {
+									const isInvalid =
+										field.state.meta.isTouched && !field.state.meta.isValid;
+									return (
+										<Field data-invalid={isInvalid}>
+											<FieldLabel
+												htmlFor={field.name}
+												className="text-primary font-bold"
+											>
+												Confirmar senha
+											</FieldLabel>
+											<Input
+												id={field.name}
+												name={field.name}
+												type="password"
 												placeholder="*******"
+												className="placeholder:text-secondary bg-white!"
+												value={field.state.value}
+												onBlur={field.handleBlur}
+												onChange={(e) => field.handleChange(e.target.value)}
+												aria-invalid={isInvalid}
 											/>
 											{isInvalid && (
 												<FieldError errors={field.state.meta.errors} />
@@ -262,23 +385,23 @@ export function LoginForm({
 							</form.Field>
 
 							<Field>
-								<Button type="submit" disabled={loginMutation.isPending}>
-									{loginMutation.isPending ? (
+								<Button type="submit" disabled={registerMutation.isPending}>
+									{registerMutation.isPending ? (
 										<>
 											<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-											Entrando...
+											Cadastrando...
 										</>
 									) : (
-										"Login"
+										"Cadastrar"
 									)}
 								</Button>
 								<FieldDescription className="text-center">
-									Não possui uma conta?{" "}
+									Ja possui uma conta?{" "}
 									<Link
-										to="/auth/cadastro"
+										to="/auth/login"
 										className="underline font-bold text-primary"
 									>
-										Cadastre-se
+										Faca login
 									</Link>
 								</FieldDescription>
 							</Field>
@@ -287,13 +410,13 @@ export function LoginForm({
 				</CardContent>
 			</Card>
 			<FieldDescription className="px-6 text-center text-xs text-muted-foreground">
-				Ao clicar em login, você está concordando com nossos{" "}
+				Ao clicar em cadastrar, voce esta concordando com nossos{" "}
 				<Link to="/" className="underline">
-					Termos de Serviço
+					Termos de Servico
 				</Link>{" "}
 				e{" "}
 				<Link to="/" className="underline">
-					Política de Privacidade
+					Politica de Privacidade
 				</Link>
 				.
 			</FieldDescription>

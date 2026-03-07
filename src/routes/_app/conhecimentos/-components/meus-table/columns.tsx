@@ -25,6 +25,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "#/components/ui/dialog";
+import { cn } from "#/lib/utils";
 
 export interface Conhecimento {
 	id: string;
@@ -77,18 +78,24 @@ export const getColumns = ({
 	{
 		accessorKey: "nivel",
 		header: "Nível",
-		cell: ({ row }) => (
-			<div className="text-center">
-				<Badge
-					variant={
-						row.getValue("nivel") === "AVANCADO" ? "destructive" : "default"
-					}
-					className="text-[10px] font-bold"
-				>
-					{row.getValue("nivel")}
-				</Badge>
-			</div>
-		),
+		cell: ({ row }) => {
+			const nivel = row.getValue("nivel") as string;
+
+			return (
+				<div className="text-center">
+					<Badge
+						variant={nivel === "AVANCADO" ? "destructive" : "default"}
+						className={cn(
+							"text-[10px] font-bold uppercase tracking-wider",
+							nivel === "BASICO" && "bg-emerald-500 hover:bg-emerald-600",
+							nivel === "INTERMEDIARIO" && "bg-amber-500 hover:bg-amber-600",
+						)}
+					>
+						{nivel}
+					</Badge>
+				</div>
+			);
+		},
 	},
 	{
 		accessorKey: "criadoEm",

@@ -1,5 +1,9 @@
 import type { ColumnDef } from "@tanstack/react-table";
-import { AlertTriangle, Trash2, Edit, User } from "lucide-react";
+import { AlertTriangle, Edit, Trash2, User } from "lucide-react";
+import {
+	ConhecimentoForm,
+	type ConhecimentoValues,
+} from "#/components/ConhecimentoForm";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -21,11 +25,8 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "#/components/ui/dialog";
-import {
-	ConhecimentoForm,
-	type ConhecimentoValues,
-} from "#/components/ConhecimentoForm";
-import { type Conhecimento } from "#/lib/services/conhecimentos.service";
+import type { Conhecimento } from "#/lib/services/conhecimentos.service";
+import { cn } from "#/lib/utils";
 
 interface ColumnProps {
 	editingConhecimento: Conhecimento | null;
@@ -67,7 +68,9 @@ export const getColumns = ({
 						<User size={10} className="text-primary" />
 						{pessoa?.nome || "Membro"}
 					</div>
-					<span className="text-[10px] text-muted-foreground">{pessoa?.email}</span>
+					<span className="text-[10px] text-muted-foreground">
+						{pessoa?.email}
+					</span>
 				</div>
 			);
 		},
@@ -89,18 +92,24 @@ export const getColumns = ({
 	{
 		accessorKey: "nivel",
 		header: "Nível",
-		cell: ({ row }) => (
-			<div className="text-center">
-				<Badge
-					variant={
-						row.getValue("nivel") === "AVANCADO" ? "destructive" : "default"
-					}
-					className="text-[10px] font-bold uppercase"
-				>
-					{row.getValue("nivel")}
-				</Badge>
-			</div>
-		),
+		cell: ({ row }) => {
+			const nivel = row.getValue("nivel") as string;
+
+			return (
+				<div className="text-center">
+					<Badge
+						variant={nivel === "AVANCADO" ? "destructive" : "default"}
+						className={cn(
+							"text-[10px] font-bold uppercase tracking-wider",
+							nivel === "BASICO" && "bg-emerald-500 hover:bg-emerald-600",
+							nivel === "INTERMEDIARIO" && "bg-amber-500 hover:bg-amber-600",
+						)}
+					>
+						{nivel}
+					</Badge>
+				</div>
+			);
+		},
 	},
 	{
 		id: "actions",
@@ -111,9 +120,7 @@ export const getColumns = ({
 				<div className="flex justify-end gap-2">
 					<Dialog
 						open={editingConhecimento?.id === item.id}
-						onOpenChange={(open) =>
-							setEditingConhecimento(open ? item : null)
-						}
+						onOpenChange={(open) => setEditingConhecimento(open ? item : null)}
 					>
 						<DialogTrigger asChild>
 							<Button
@@ -130,7 +137,8 @@ export const getColumns = ({
 									Moderação: Editar Conteúdo
 								</DialogTitle>
 								<DialogDescription>
-									Alterando conhecimento de <span className="font-bold">{item.pessoa?.nome}</span>.
+									Alterando conhecimento de{" "}
+									<span className="font-bold">{item.pessoa?.nome}</span>.
 								</DialogDescription>
 							</DialogHeader>
 							<div className="p-6">

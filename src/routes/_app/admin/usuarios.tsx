@@ -53,9 +53,19 @@ function UsuariosPage() {
 	// Mutação para excluir
 	const deleteMutation = useMutation({
 		mutationFn: (id: string) => pessoasService.delete(id),
-		onSuccess: () => {
+		onSuccess: (_, deletedId) => {
 			queryClient.invalidateQueries({
 				queryKey: queryKeys.pessoas.adminLists,
+			});
+			queryClient.invalidateQueries({
+				queryKey: queryKeys.pessoas.adminSummary,
+			});
+			queryClient.invalidateQueries({
+				queryKey: queryKeys.conhecimentos.adminSummary,
+			});
+			queryClient.invalidateQueries({ queryKey: queryKeys.conhecimentos.all });
+			queryClient.invalidateQueries({
+				queryKey: queryKeys.profile.byId(deletedId),
 			});
 			setDeletingId(null);
 		},
@@ -65,9 +75,19 @@ function UsuariosPage() {
 	const updateMutation = useMutation({
 		mutationFn: ({ id, data }: { id: string; data: Partial<Pessoa> }) =>
 			pessoasService.update(id, data),
-		onSuccess: () => {
+		onSuccess: (updatedPessoa) => {
 			queryClient.invalidateQueries({
 				queryKey: queryKeys.pessoas.adminLists,
+			});
+			queryClient.invalidateQueries({
+				queryKey: queryKeys.pessoas.adminSummary,
+			});
+			queryClient.invalidateQueries({
+				queryKey: queryKeys.conhecimentos.adminSummary,
+			});
+			queryClient.invalidateQueries({ queryKey: queryKeys.conhecimentos.all });
+			queryClient.invalidateQueries({
+				queryKey: queryKeys.profile.byId(updatedPessoa.id),
 			});
 			setEditingPessoa(null);
 		},
