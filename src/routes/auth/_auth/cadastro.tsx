@@ -1,12 +1,19 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { authService } from "#/lib/services/auth.service";
 import { CadastroForm } from "#/components/cadastro-form";
 
+
 export const Route = createFileRoute("/auth/_auth/cadastro")({
-  component: CadastroPage,
+	beforeLoad: () => {
+		if (authService.isAuthenticated()) {
+			throw redirect({
+				to: "/conhecimentos",
+			});
+		}
+	},
+	component: RouteComponent,
 });
 
-function CadastroPage() {
-  return(
-    <CadastroForm></CadastroForm>
-  )
+function RouteComponent() {
+	return <CadastroForm></CadastroForm>;
 }

@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { motion, type PanInfo, useMotionValue, useTransform } from 'motion/react';
-import React, { JSX } from 'react';
+import { motion, type PanInfo, useMotionValue, useTransform, type MotionValue, type Transition } from 'motion/react';
+import React, { type JSX } from 'react';
 import { BookOpen, Globe, Layers, LayoutTemplate, Type } from 'lucide-react';
+
 export interface CarouselItem {
   title: string;
   description: string;
@@ -63,8 +64,8 @@ interface CarouselItemProps {
   itemWidth: number;
   round: boolean;
   trackItemOffset: number;
-  x: any;
-  transition: any;
+  x: MotionValue<number>;
+  transition: Transition;
 }
 
 function CarouselItem({ item, index, itemWidth, round, trackItemOffset, x, transition }: CarouselItemProps) {
@@ -283,7 +284,7 @@ export default function Carousel({
                 activeIndex === index
                   ? round
                     ? 'bg-primary-foreground'
-                    : 'bg-destructive'
+                    : 'bg-accent'
                   : round
                     ? 'bg-primary-foreground/40'
                     : 'bg-border'

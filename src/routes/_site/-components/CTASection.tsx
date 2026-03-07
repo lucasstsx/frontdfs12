@@ -22,13 +22,13 @@ export function CTASection() {
 
 				<div className="flex flex-col gap-4 sm:flex-row">
 					<Link
-						to="/criar-conta"
-						className="rounded-xl bg-destructive px-8 py-3.5 font-bold text-destructive-foreground shadow-lg transition-transform hover:scale-105 active:scale-95"
+						to="/auth/cadastro"
+						className="rounded-xl bg-accent px-8 py-3.5 font-bold text-accent-foreground shadow-lg transition-transform hover:scale-105 active:scale-95"
 					>
 						Criar conta gratuita
 					</Link>
 					<Link
-						to="/about"
+						to="/"
 						className="rounded-xl border-2 border-secondary px-8 py-3.5 font-bold text-secondary transition-colors hover:bg-secondary hover:text-primary"
 					>
 						Saber mais

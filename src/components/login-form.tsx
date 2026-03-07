@@ -1,3 +1,7 @@
+import { useForm } from "@tanstack/react-form";
+import { useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { z } from "zod";
 import { Button } from "#/components/ui/button";
 import {
 	Card,
@@ -9,50 +13,53 @@ import {
 import {
 	Field,
 	FieldDescription,
+	FieldError,
 	FieldGroup,
 	FieldLabel,
 	FieldSeparator,
 } from "#/components/ui/field";
 import { Input } from "#/components/ui/input";
 import { cn } from "#/lib/utils";
-import axios from 'axios';
-import { useState } from "react";
+
+const loginSchema = z.object({
+	email: z.email("E-mail inválido"),
+	password: z.string(),
+});
 
 export function LoginForm({
 	className,
 	...props
 }: React.ComponentProps<"div">) {
-// Função de login
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+	const navigate = useNavigate();
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+	const form = useForm({
+		defaultValues: {
+			email: "",
+			password: "",
+		},
+		validators: {
+			onChange: loginSchema,
+		},
+		onSubmit: async ({ value }) => {
+			setIsSubmitting(true);
+			try {
+				console.log("Login realizado com sucesso!", value);
+				await new Promise((resolve) => setTimeout(resolve, 1000));
+				navigate({ to: "/" });
+			} catch (error) {
+				console.error("Erro no login:", error);
+			} finally {
+				setIsSubmitting(false);
+			}
+		},
+	});
 
-    try {
-      const response = await axios.post("link api", {
-        email,
-        password,
-      })
-
-      const token = response.data.token
-
-      localStorage.setItem("token", token)
-
-      console.log("Login realizado com sucesso!")
-
-    } catch (error: any) {
-      console.error(
-        "Erro no login:",
-        error.response ? error.response.data : error.message
-      )
-    }
-  }
 	return (
 		<div className={cn("flex flex-col gap-6", className)} {...props}>
 			<Card className="bg-[#DAEEE3]/10">
 				<CardHeader className="text-center">
-					<CardTitle className="text-xl text-primary">
+					<CardTitle className="text-xl text-primary font-bold">
 						Vamos começar a aprender!
 					</CardTitle>
 					<CardDescription className="text-primary">
@@ -60,19 +67,29 @@ export function LoginForm({
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
-					<form onSubmit={handleSubmit}>
+					<form
+						onSubmit={(e) => {
+							e.preventDefault();
+							e.stopPropagation();
+							form.handleSubmit();
+						}}
+					>
 						<FieldGroup>
-							<Field>
-								<Button type="button" className="bg-[#587DBD] hover:bg-[#587DBD]/80">
+							<div className="flex flex-col gap-3">
+								<Button
+									type="button"
+									className="bg-[#587DBD] hover:bg-[#587DBD]/80"
+								>
 									<svg
-										height="200px"
-										width="200px"
+										height="20px"
+										width="20px"
 										id="Layer_1"
 										xmlns="http://www.w3.org/2000/svg"
 										xmlnsXlink="http://www.w3.org/1999/xlink"
 										viewBox="0 0 382 382"
 										xmlSpace="preserve"
 										fill="#000000"
+										className="mr-2"
 									>
 										<title>LinkdIn Icone</title>
 										<g id="SVGRepo_bgCarrier" strokeWidth={0} />
@@ -92,12 +109,18 @@ export function LoginForm({
 									</svg>
 									Continue com LinkedIn
 								</Button>
-								<Button type="button" className="bg-[#55B8FF] hover:bg-[#55B8FF]/80">
+								<Button
+									type="button"
+									className="bg-[#55B8FF] hover:bg-[#55B8FF]/80"
+								>
 									<svg
 										viewBox="-3 0 262 262"
 										xmlns="http://www.w3.org/2000/svg"
 										preserveAspectRatio="xMidYMid"
 										fill="#000000"
+										height="20px"
+										width="20px"
+										className="mr-2"
 									>
 										<title>Google Icon</title>
 										<g id="SVGRepo_bgCarrier" strokeWidth={0} />
@@ -127,37 +150,86 @@ export function LoginForm({
 									</svg>
 									Continue com Google
 								</Button>
-							</Field>
+							</div>
+
 							<FieldSeparator className="*:data-[slot=field-separator-content]:bg-card *:data-[slot=field-separator-line]:bg-secondary">
-                <span className="text-secondary">Ou continue com</span>
+								<span className="text-secondary">Ou continue com</span>
 							</FieldSeparator>
+
+							<form.Field name="email">
+								{(field) => {
+									const isInvalid =
+										field.state.meta.isTouched && !field.state.meta.isValid;
+									return (
+										<Field data-invalid={isInvalid}>
+											<FieldLabel
+												htmlFor={field.name}
+												className="text-primary font-bold"
+											>
+												Email
+											</FieldLabel>
+											<Input
+												id={field.name}
+												name={field.name}
+												type="email"
+												placeholder="Seu email"
+												className="placeholder:text-secondary bg-white!"
+												value={field.state.value}
+												onBlur={field.handleBlur}
+												onChange={(e) => field.handleChange(e.target.value)}
+												aria-invalid={isInvalid}
+											/>
+											{isInvalid && (
+												<FieldError errors={field.state.meta.errors} />
+											)}
+										</Field>
+									);
+								}}
+							</form.Field>
+
+							<form.Field name="password">
+								{(field) => {
+									const isInvalid =
+										field.state.meta.isTouched && !field.state.meta.isValid;
+									return (
+										<Field data-invalid={isInvalid}>
+											<div className="flex items-center">
+												<FieldLabel
+													htmlFor={field.name}
+													className="text-primary font-bold"
+												>
+													Senha
+												</FieldLabel>
+												<a
+													href="#"
+													className="ml-auto text-sm underline-offset-4 hover:underline text-primary"
+												>
+													Esqueceu a senha?
+												</a>
+											</div>
+											<Input
+												id={field.name}
+												name={field.name}
+												type="password"
+												value={field.state.value}
+												onBlur={field.handleBlur}
+												onChange={(e) => field.handleChange(e.target.value)}
+												aria-invalid={isInvalid}
+												className="placeholder:text-secondary bg-white!"
+												placeholder="*******"
+											/>
+											{isInvalid && (
+												<FieldError errors={field.state.meta.errors} />
+											)}
+										</Field>
+									);
+								}}
+							</form.Field>
+
 							<Field>
-								<FieldLabel htmlFor="email" className="text-primary font-bold">Email</FieldLabel>
-								<Input
-									id="email"
-									type="email"
-									placeholder="Seu email"
-                  className="placeholder:text-secondary"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-									required
-								/>
-							</Field>
-							<Field>
-								<div className="flex items-center">
-									<FieldLabel htmlFor="password" className="text-primary font-bold">Senha</FieldLabel>
-									<a
-										href="#"
-										className="ml-auto text-sm underline-offset-4 hover:underline text-primary"
-									>
-										Esqueceu a senha?
-									</a>
-								</div>
-								<Input id="password" type="password" required value={password}
-                onChange={(e) => setPassword(e.target.value)}/>
-							</Field>
-							<Field>
-								<Button type="submit">Login</Button>
+								<Button type="submit" disabled={isSubmitting}>
+									{isSubmitting ? "Entrando..." : "Login"}
+								</Button>
 								<FieldDescription className="text-center">
 									Não possui uma conta? <a href="#">Cadastre-se</a>
 								</FieldDescription>
@@ -166,9 +238,16 @@ export function LoginForm({
 					</form>
 				</CardContent>
 			</Card>
-			<FieldDescription className="px-6 text-center">
-				Ao clicar em login, você está concordando com nossos <a href="#">Termos de Serviço</a>{" "}
-				e <a href="#">Política de Privacidade</a>.
+			<FieldDescription className="px-6 text-center text-xs">
+				Ao clicar em login, você está concordando com nossos{" "}
+				<a href="#" className="underline">
+					Termos de Serviço
+				</a>{" "}
+				e{" "}
+				<a href="#" className="underline">
+					Política de Privacidade
+				</a>
+				.
 			</FieldDescription>
 		</div>
 	);

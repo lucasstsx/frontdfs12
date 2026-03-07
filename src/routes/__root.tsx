@@ -1,8 +1,20 @@
-import { createRootRoute, Outlet } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import type { QueryClient } from "@tanstack/react-query";
+import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
+import { lazy, Suspense } from "react";
 import "../styles.css";
+import { NotFound } from "#/components/NotFound";
 
-export const Route = createRootRoute({
+const TanStackRouterDevtools = import.meta.env.DEV
+	? lazy(() =>
+			import("@tanstack/react-router-devtools").then((module) => ({
+				default: module.TanStackRouterDevtools,
+			})),
+		)
+	: null;
+
+export const Route = createRootRouteWithContext<{
+	queryClient: QueryClient;
+}>()({
 	head: () => ({
 		meta: [
 			{
@@ -20,13 +32,18 @@ export const Route = createRootRoute({
 		],
 	}),
 	component: RootComponent,
+	notFoundComponent: NotFound,
 });
 
 function RootComponent() {
 	return (
 		<>
 			<Outlet />
-			<TanStackRouterDevtools />
+			{TanStackRouterDevtools ? (
+				<Suspense fallback={null}>
+					<TanStackRouterDevtools />
+				</Suspense>
+			) : null}
 		</>
 	);
 }
