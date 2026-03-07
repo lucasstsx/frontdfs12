@@ -1,22 +1,31 @@
-import { createRouter, RouterProvider } from "@tanstack/react-router";
+import { RouterProvider } from "@tanstack/react-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import ReactDOM from "react-dom/client";
-import { routeTree } from "./routeTree.gen";
+import { getRouter } from "./router";
 
-const router = createRouter({
-	routeTree,
-	defaultPreload: "intent",
-	scrollRestoration: true,
+// Configuração do Query Client para o TanStack Query
+const queryClient = new QueryClient({
+	defaultOptions: {
+		queries: {
+			staleTime: 1000 * 60 * 5, // 5 minutos
+			gcTime: 1000 * 60 * 60 * 24, // 24 horas
+			retry: 1,
+			refetchOnWindowFocus: false,
+		},
+	},
 });
 
-declare module "@tanstack/react-router" {
-	interface Register {
-		router: typeof router;
-	}
-}
+const router = getRouter(queryClient);
 
 const rootElement = document.getElementById("app");
 
 if (rootElement && !rootElement.innerHTML) {
 	const root = ReactDOM.createRoot(rootElement);
-	root.render(<RouterProvider router={router} />);
+	root.render(
+		<QueryClientProvider client={queryClient}>
+			<RouterProvider router={router} />
+			<ReactQueryDevtools initialIsOpen={false} />
+		</QueryClientProvider>,
+	);
 }
