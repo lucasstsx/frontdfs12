@@ -6,6 +6,7 @@ import { CTASection } from "./-components/CTASection";
 import { HeroSection } from "./-components/HeroSection";
 
 const ScrollVelocityBanner = lazy(() =>
+	// Seções animadas ficam lazy para reduzir custo do primeiro paint da home.
 	import("./-components/ScrollVelocityBanner").then((module) => ({
 		default: module.ScrollVelocityBanner,
 	})),
@@ -18,6 +19,7 @@ const ConhecimentosCarrosselSection = lazy(() =>
 
 export const Route = createFileRoute("/_site/")({
 	loader: ({ context }) =>
+		// Preload dos conhecimentos da landing para o carrossel abrir com dados.
 		context.queryClient.ensureQueryData(conhecimentosLandingQueryOptions()),
 	component: HomePage,
 });

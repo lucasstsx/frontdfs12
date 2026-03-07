@@ -17,6 +17,7 @@ export function HeroSection() {
 				Aprenda algo novo,
 				<div className="mt-2 flex items-center justify-center space-x-2">
 					<span>partilhe</span>
+					{/* Destaque dinamico para reforcar proposta da landing sem mudar estrutura do titulo. */}
 					<RotatingText
 						texts={[
 							"conhecimentos.",

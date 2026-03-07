@@ -17,6 +17,7 @@ export const pessoasService = {
 		page?: number;
 		limit?: number;
 	}): Promise<PaginatedResponse<Pessoa>> {
+		// Listagem administrativa paginada de usuarios.
 		const { data } = await api.get<PaginatedResponse<Pessoa>>("/pessoas", {
 			params,
 		});

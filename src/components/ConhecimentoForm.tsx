@@ -55,6 +55,7 @@ export function ConhecimentoForm({
 }: ConhecimentoFormProps) {
 	const form = useForm({
 		defaultValues: {
+			// Defaults cobrem criacao; initialValues preenche o mesmo form para edicao.
 			titulo: initialValues?.titulo ?? "",
 			descricao: initialValues?.descricao ?? "",
 			categoria: (initialValues?.categoria ?? "TECNOLOGIA") as Categoria,
@@ -64,6 +65,7 @@ export function ConhecimentoForm({
 			onChange: conhecimentoSchema,
 		},
 		onSubmit: async ({ value }) => {
+			// Normaliza para o contrato do componente pai (pagina/modal decide persistencia).
 			await onSubmit(value as ConhecimentoValues);
 		},
 	});

@@ -26,11 +26,13 @@ export function ConhecimentoFilters({
 
 	const form = useForm({
 		defaultValues: {
+			// O formulario nasce da URL para manter estado em refresh e link compartilhado.
 			busca: searchParams.busca ?? "",
 			categoria: searchParams.categoria ?? "TODOS",
 			nivel: searchParams.nivel ?? "TODOS",
 		},
 		onSubmit: async ({ value }) => {
+			// Filtro mudou: sempre voltamos para a primeira pagina dos resultados.
 			navigate({
 				search: {
 					...searchParams,
@@ -107,6 +109,7 @@ export function ConhecimentoFilters({
 														undefined
 													>,
 												);
+												// Select aplica imediatamente para reduzir um clique.
 												form.handleSubmit();
 											}}
 										>
@@ -147,6 +150,7 @@ export function ConhecimentoFilters({
 														undefined
 													>,
 												);
+												// Select aplica imediatamente para reduzir um clique.
 												form.handleSubmit();
 											}}
 										>
@@ -176,6 +180,7 @@ export function ConhecimentoFilters({
 									className="w-full"
 									onClick={() => {
 										form.reset();
+										// Limpa estado local e URL no mesmo fluxo para evitar divergencia.
 										navigate({
 											search: {
 												busca: "",

@@ -1,5 +1,6 @@
+import { useForm } from "@tanstack/react-form";
 import type { ColumnDef } from "@tanstack/react-table";
-import { AlertTriangle, Trash2, Shield, User, Edit, Save } from "lucide-react";
+import { AlertTriangle, Edit, Save, Shield, Trash2, User } from "lucide-react";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -11,6 +12,8 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from "#/components/ui/alert-dialog";
+import { Badge } from "#/components/ui/badge";
+import { Button } from "#/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
@@ -19,12 +22,9 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "#/components/ui/dialog";
-import { Badge } from "#/components/ui/badge";
-import { Button } from "#/components/ui/button";
-import { Input } from "#/components/ui/input";
 import { Field, FieldGroup, FieldLabel } from "#/components/ui/field";
-import { type Pessoa } from "#/lib/services/pessoas.service";
-import { useForm } from "@tanstack/react-form";
+import { Input } from "#/components/ui/input";
+import type { Pessoa } from "#/lib/services/pessoas.service";
 
 interface ColumnProps {
 	editingPessoa: Pessoa | null;
@@ -59,7 +59,9 @@ export const getColumns = ({
 		accessorKey: "email",
 		header: "E-mail",
 		cell: ({ row }) => (
-			<div className="text-muted-foreground font-medium">{row.getValue("email")}</div>
+			<div className="text-muted-foreground font-medium">
+				{row.getValue("email")}
+			</div>
 		),
 	},
 	{
@@ -88,6 +90,7 @@ export const getColumns = ({
 			return (
 				<div className="flex justify-end gap-2">
 					<Dialog
+						// Mantemos um unico modal de edicao aberto por vez via id selecionado.
 						open={editingPessoa?.id === item.id}
 						onOpenChange={(open) => setEditingPessoa(open ? item : null)}
 					>
@@ -104,12 +107,13 @@ export const getColumns = ({
 							<DialogHeader>
 								<DialogTitle>Editar Usuário</DialogTitle>
 								<DialogDescription>
-									Alterando informações básicas de <span className="font-bold">{item.nome}</span>.
+									Alterando informações básicas de{" "}
+									<span className="font-bold">{item.nome}</span>.
 								</DialogDescription>
 							</DialogHeader>
-							
-							<UserEditForm 
-								user={item} 
+
+							<UserEditForm
+								user={item}
 								onSubmit={(data) => handleEdit(item.id, data)}
 								onCancel={() => setEditingPessoa(null)}
 							/>
@@ -117,6 +121,7 @@ export const getColumns = ({
 					</Dialog>
 
 					<AlertDialog
+						// Mesmo padrao do edit: controle centralizado do item em remocao.
 						open={deletingId === item.id}
 						onOpenChange={(open) => setDeletingId(open ? item.id : null)}
 					>
@@ -164,17 +169,18 @@ export const getColumns = ({
 	},
 ];
 
-function UserEditForm({ 
-	user, 
-	onSubmit, 
-	onCancel 
-}: { 
-	user: Pessoa, 
-	onSubmit: (data: Partial<Pessoa>) => void,
-	onCancel: () => void 
+function UserEditForm({
+	user,
+	onSubmit,
+	onCancel,
+}: {
+	user: Pessoa;
+	onSubmit: (data: Partial<Pessoa>) => void;
+	onCancel: () => void;
 }) {
 	const form = useForm({
 		defaultValues: {
+			// Form abre preenchido com snapshot atual para edicao rapida no modal.
 			nome: user.nome,
 			telefone: user.telefone,
 		},
@@ -218,7 +224,9 @@ function UserEditForm({
 					)}
 				</form.Field>
 				<div className="flex justify-end gap-2 pt-4">
-					<Button type="button" variant="ghost" onClick={onCancel}>Cancelar</Button>
+					<Button type="button" variant="ghost" onClick={onCancel}>
+						Cancelar
+					</Button>
 					<Button type="submit" className="font-bold">
 						<Save size={16} className="mr-2" />
 						Salvar

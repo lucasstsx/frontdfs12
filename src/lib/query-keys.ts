@@ -10,6 +10,7 @@ export interface AdminUsuariosParams {
 }
 
 function normalizeConhecimentosParams(params?: ListConhecimentosParams) {
+	// Normalizacao evita gerar chaves diferentes para filtros semanticamente iguais.
 	return {
 		busca: params?.busca?.trim() || undefined,
 		categoria: params?.categoria || undefined,
@@ -20,6 +21,7 @@ function normalizeConhecimentosParams(params?: ListConhecimentosParams) {
 }
 
 function normalizeAdminConhecimentosParams(params?: AdminConhecimentosParams) {
+	// Mantem titulo/page estaveis para cache e invalidacao previsiveis no admin.
 	return {
 		titulo: params?.titulo?.trim() || "",
 		page: params?.page ?? 1,
@@ -27,6 +29,7 @@ function normalizeAdminConhecimentosParams(params?: AdminConhecimentosParams) {
 }
 
 function normalizeAdminUsuariosParams(params?: AdminUsuariosParams) {
+	// Pagina e o unico filtro server-side da listagem de usuarios hoje.
 	return {
 		page: params?.page ?? 1,
 	};

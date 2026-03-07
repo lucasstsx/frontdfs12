@@ -2,7 +2,9 @@ import { Link } from "@tanstack/react-router";
 
 export function NotFound() {
 	return (
+		// Tela 404 ocupa a viewport inteira para manter foco e orientar o retorno.
 		<section className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-8">
+			{/* Camadas com tokens do tema para dar destaque sem quebrar a paleta global. */}
 			<div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_20%_20%,hsl(var(--primary)/0.18),transparent_35%),radial-gradient(circle_at_78%_24%,hsl(var(--accent)/0.16),transparent_36%),radial-gradient(circle_at_74%_82%,hsl(var(--secondary)/0.24),transparent_44%)]" />
 
 			<div className="mx-auto flex w-full max-w-3xl flex-col items-center rounded-3xl border-2 border-accent/25 bg-card/95 px-6 py-10 text-center shadow-2xl sm:px-12">

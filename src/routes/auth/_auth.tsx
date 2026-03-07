@@ -15,6 +15,7 @@ export const Route = createFileRoute("/auth/_auth")({
 function AuthLayout() {
 	return (
 		<div className="flex flex-col min-h-screen bg-background">
+			{/* Header enxuto no fluxo de auth reduz distracoes e foco em login/cadastro. */}
 			<HeaderRoot>
 				<HeaderContent>
 					<HeaderLogo />
@@ -26,6 +27,7 @@ function AuthLayout() {
 			</HeaderRoot>
 
 			<main className="flex-1 flex items-center justify-center p-4">
+				{/* Outlet recebe login/cadastro mantendo mesmo envelope visual. */}
 				<div className="w-full h-full sm:p-12 md:p-24 container flex items-center justify-center">
 					<Outlet />
 				</div>

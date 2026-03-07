@@ -20,6 +20,7 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/_app/admin/conhecimentos")({
 	validateSearch: (search) => searchSchema.parse(search),
+	// Faz o loader reagir a mudancas de filtro/paginacao e reaproveitar cache por chave.
 	loaderDeps: ({ search }) => searchSchema.parse(search),
 	loader: ({ context, deps }) =>
 		context.queryClient.ensureQueryData(
@@ -53,6 +54,7 @@ function ConhecimentosPage() {
 		mutationFn: ({ id, data }: { id: string; data: Partial<Conhecimento> }) =>
 			conhecimentosService.update(id, data),
 		onSuccess: (updatedConhecimento) => {
+			// Admin altera dados que alimentam lista, dashboard e perfil do criador.
 			queryClient.invalidateQueries({
 				queryKey: queryKeys.conhecimentos.adminLists,
 			});
@@ -71,6 +73,7 @@ function ConhecimentosPage() {
 	const deleteMutation = useMutation({
 		mutationFn: (id: string) => conhecimentosService.delete(id),
 		onSuccess: (_, deletedId) => {
+			// Mantemos as visoes agregadas sincronizadas sem precisar recarregar a pagina.
 			queryClient.invalidateQueries({
 				queryKey: queryKeys.conhecimentos.adminLists,
 			});
@@ -79,6 +82,7 @@ function ConhecimentosPage() {
 			});
 			queryClient.invalidateQueries({ queryKey: queryKeys.conhecimentos.all });
 
+			// A API de delete nao devolve o dono, entao pegamos da lista atual para invalidar o perfil certo.
 			const deletedConhecimento = conhecimentos.find(
 				(item) => item.id === deletedId,
 			);
@@ -108,6 +112,7 @@ function ConhecimentosPage() {
 	}, [deletingId, deleteMutation]);
 
 	const handleSearchChange = (value: string) => {
+		// Sempre volta para a primeira pagina quando o termo muda.
 		navigate({
 			search: (prev) => ({ ...prev, titulo: value, page: 1 }),
 			replace: true,
@@ -115,6 +120,7 @@ function ConhecimentosPage() {
 	};
 
 	const handlePageChange = (newPage: number) => {
+		// Mantemos os outros filtros no estado da URL e trocamos somente a pagina.
 		navigate({
 			search: (prev) => ({ ...prev, page: newPage }),
 		});

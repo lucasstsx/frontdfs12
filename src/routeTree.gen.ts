@@ -19,7 +19,6 @@ import { Route as AppConhecimentosIndexRouteImport } from './routes/_app/conheci
 import { Route as AppAdminIndexRouteImport } from './routes/_app/admin/index'
 import { Route as AuthAuthLoginRouteImport } from './routes/auth/_auth/login'
 import { Route as AuthAuthCadastroRouteImport } from './routes/auth/_auth/cadastro'
-import { Route as AppConhecimentosNovoRouteImport } from './routes/_app/conhecimentos/novo'
 import { Route as AppConhecimentosMeusRouteImport } from './routes/_app/conhecimentos/meus'
 import { Route as AppAdminUsuariosRouteImport } from './routes/_app/admin/usuarios'
 import { Route as AppAdminConhecimentosRouteImport } from './routes/_app/admin/conhecimentos'
@@ -72,11 +71,6 @@ const AuthAuthCadastroRoute = AuthAuthCadastroRouteImport.update({
   path: '/cadastro',
   getParentRoute: () => AuthAuthRoute,
 } as any)
-const AppConhecimentosNovoRoute = AppConhecimentosNovoRouteImport.update({
-  id: '/conhecimentos/novo',
-  path: '/conhecimentos/novo',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppConhecimentosMeusRoute = AppConhecimentosMeusRouteImport.update({
   id: '/conhecimentos/meus',
   path: '/conhecimentos/meus',
@@ -101,7 +95,6 @@ export interface FileRoutesByFullPath {
   '/admin/conhecimentos': typeof AppAdminConhecimentosRoute
   '/admin/usuarios': typeof AppAdminUsuariosRoute
   '/conhecimentos/meus': typeof AppConhecimentosMeusRoute
-  '/conhecimentos/novo': typeof AppConhecimentosNovoRoute
   '/auth/cadastro': typeof AuthAuthCadastroRoute
   '/auth/login': typeof AuthAuthLoginRoute
   '/admin/': typeof AppAdminIndexRoute
@@ -114,7 +107,6 @@ export interface FileRoutesByTo {
   '/admin/conhecimentos': typeof AppAdminConhecimentosRoute
   '/admin/usuarios': typeof AppAdminUsuariosRoute
   '/conhecimentos/meus': typeof AppConhecimentosMeusRoute
-  '/conhecimentos/novo': typeof AppConhecimentosNovoRoute
   '/auth/cadastro': typeof AuthAuthCadastroRoute
   '/auth/login': typeof AuthAuthLoginRoute
   '/admin': typeof AppAdminIndexRoute
@@ -131,7 +123,6 @@ export interface FileRoutesById {
   '/_app/admin/conhecimentos': typeof AppAdminConhecimentosRoute
   '/_app/admin/usuarios': typeof AppAdminUsuariosRoute
   '/_app/conhecimentos/meus': typeof AppConhecimentosMeusRoute
-  '/_app/conhecimentos/novo': typeof AppConhecimentosNovoRoute
   '/auth/_auth/cadastro': typeof AuthAuthCadastroRoute
   '/auth/_auth/login': typeof AuthAuthLoginRoute
   '/_app/admin/': typeof AppAdminIndexRoute
@@ -147,7 +138,6 @@ export interface FileRouteTypes {
     | '/admin/conhecimentos'
     | '/admin/usuarios'
     | '/conhecimentos/meus'
-    | '/conhecimentos/novo'
     | '/auth/cadastro'
     | '/auth/login'
     | '/admin/'
@@ -160,7 +150,6 @@ export interface FileRouteTypes {
     | '/admin/conhecimentos'
     | '/admin/usuarios'
     | '/conhecimentos/meus'
-    | '/conhecimentos/novo'
     | '/auth/cadastro'
     | '/auth/login'
     | '/admin'
@@ -176,7 +165,6 @@ export interface FileRouteTypes {
     | '/_app/admin/conhecimentos'
     | '/_app/admin/usuarios'
     | '/_app/conhecimentos/meus'
-    | '/_app/conhecimentos/novo'
     | '/auth/_auth/cadastro'
     | '/auth/_auth/login'
     | '/_app/admin/'
@@ -261,13 +249,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAuthCadastroRouteImport
       parentRoute: typeof AuthAuthRoute
     }
-    '/_app/conhecimentos/novo': {
-      id: '/_app/conhecimentos/novo'
-      path: '/conhecimentos/novo'
-      fullPath: '/conhecimentos/novo'
-      preLoaderRoute: typeof AppConhecimentosNovoRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/conhecimentos/meus': {
       id: '/_app/conhecimentos/meus'
       path: '/conhecimentos/meus'
@@ -312,7 +293,6 @@ interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRouteWithChildren
   AppPerfilRoute: typeof AppPerfilRoute
   AppConhecimentosMeusRoute: typeof AppConhecimentosMeusRoute
-  AppConhecimentosNovoRoute: typeof AppConhecimentosNovoRoute
   AppConhecimentosIndexRoute: typeof AppConhecimentosIndexRoute
 }
 
@@ -320,7 +300,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminRoute: AppAdminRouteWithChildren,
   AppPerfilRoute: AppPerfilRoute,
   AppConhecimentosMeusRoute: AppConhecimentosMeusRoute,
-  AppConhecimentosNovoRoute: AppConhecimentosNovoRoute,
   AppConhecimentosIndexRoute: AppConhecimentosIndexRoute,
 }
 

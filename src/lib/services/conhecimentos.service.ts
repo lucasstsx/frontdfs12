@@ -38,6 +38,7 @@ export const conhecimentosService = {
 	async list(
 		params?: ListConhecimentosParams,
 	): Promise<PaginatedResponse<Conhecimento>> {
+		// "TODOS" e valor de UI; no backend esse filtro precisa ir como undefined.
 		const { data } = await api.get<PaginatedResponse<Conhecimento>>(
 			"/conhecimentos",
 			{
@@ -55,6 +56,7 @@ export const conhecimentosService = {
 	async create(
 		conhecimento: Omit<Conhecimento, "id" | "criadoEm">,
 	): Promise<Conhecimento> {
+		// id e criadoEm sao responsabilidade da API.
 		const { data } = await api.post<Conhecimento>(
 			"/conhecimentos",
 			conhecimento,

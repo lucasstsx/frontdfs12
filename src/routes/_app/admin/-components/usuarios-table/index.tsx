@@ -32,6 +32,7 @@ export function UsuariosTable({
 	pageIndex,
 	onPageChange,
 }: UsuariosTableProps) {
+	// Mantemos as colunas memoizadas para evitar rerender em cascata no DataTable.
 	const columns = useMemo(
 		() =>
 			getColumns({

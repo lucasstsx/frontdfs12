@@ -37,6 +37,7 @@ export function ConhecimentosCarrosselSection() {
 
 	const carouselItems = useMemo<CarouselItem[]>(() => {
 		if (!Array.isArray(conhecimentos) || conhecimentos.length === 0) return [];
+		// Carrossel mostra vitrine curta; limitamos localmente para manter ritmo visual.
 		return conhecimentos.slice(0, 6).map((item, index) => ({
 			id: Number.parseInt(item.id.slice(0, 8), 16) || index + 1,
 			title: item.titulo,
@@ -50,6 +51,7 @@ export function ConhecimentosCarrosselSection() {
 	useEffect(() => {
 		const update = () => {
 			if (containerRef.current) {
+				// BaseWidth responsivo melhora encaixe do componente 3D em telas menores.
 				setCarouselWidth(containerRef.current.offsetWidth);
 			}
 		};

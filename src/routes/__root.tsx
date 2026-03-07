@@ -32,6 +32,7 @@ export const Route = createRootRouteWithContext<{
 		],
 	}),
 	component: RootComponent,
+	// Centraliza a 404 da aplicacao em um unico componente customizado.
 	notFoundComponent: NotFound,
 });
 

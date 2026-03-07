@@ -23,6 +23,7 @@ const socialLinks = [
 export function Footer() {
 	return (
 		<footer className="bg-primary px-8 py-10 text-primary-foreground border-t-4 border-accent">
+			{/* Links estaticos centralizados em arrays para facilitar manutencao de navegacao. */}
 			<div className="mx-auto grid max-w-5xl gap-10 sm:grid-cols-[1fr_auto_auto] lg:gap-16">
 				<div className="flex flex-col gap-4">
 					<div className="items-center gap-3 flex">

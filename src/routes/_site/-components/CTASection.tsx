@@ -21,6 +21,7 @@ export function CTASection() {
 				</p>
 
 				<div className="flex flex-col gap-4 sm:flex-row">
+					{/* CTA principal leva para onboarding; secundario volta para contexto da home. */}
 					<Link
 						to="/auth/cadastro"
 						className="rounded-xl bg-accent px-8 py-3.5 font-bold text-accent-foreground shadow-lg transition-transform hover:scale-105 active:scale-95"

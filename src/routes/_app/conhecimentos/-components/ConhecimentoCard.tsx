@@ -35,6 +35,7 @@ export function ConhecimentoCard({ item }: ConhecimentoCardProps) {
 					<Badge
 						variant={item.nivel === "AVANCADO" ? "destructive" : "default"}
 						className={cn(
+							// Mapeamento de cor alinhado com tabelas para manter leitura consistente do nivel.
 							"font-bold uppercase tracking-wider",
 							item.nivel === "BASICO" && "bg-emerald-500 hover:bg-emerald-600",
 							item.nivel === "INTERMEDIARIO" &&
@@ -74,6 +75,7 @@ export function ConhecimentoCard({ item }: ConhecimentoCardProps) {
 								Saber Mais
 							</Button>
 						</DialogTrigger>
+						{/* Detalhes e contato ficam no modal para manter o card compacto na grade. */}
 						<DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-2 gap-0">
 							<DialogHeader className="p-6 pr-12 bg-muted/5 border-b">
 								<div className="flex justify-between items-start mb-2">

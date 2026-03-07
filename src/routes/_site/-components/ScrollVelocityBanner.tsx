@@ -14,6 +14,7 @@ export function ScrollVelocityBanner() {
 
 		const observer = new IntersectionObserver(
 			([entry]) => {
+				// Pausa a animacao quando o banner sai da viewport para economizar render.
 				setIsInViewport(entry?.isIntersecting ?? false);
 			},
 			{ threshold: 0.1 },
@@ -40,6 +41,7 @@ export function ScrollVelocityBanner() {
 	}, []);
 
 	const paused = !isInViewport || !isPageVisible;
+	// A combinacao viewport + visibilidade evita animacao rodando em aba oculta.
 
 	return (
 		<div

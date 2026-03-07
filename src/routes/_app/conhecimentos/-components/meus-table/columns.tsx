@@ -80,6 +80,7 @@ export const getColumns = ({
 		header: "Nível",
 		cell: ({ row }) => {
 			const nivel = row.getValue("nivel") as string;
+			// Mesmo padrao da tabela admin e dos cards para nao mudar o significado da cor.
 
 			return (
 				<div className="text-center">
@@ -114,6 +115,7 @@ export const getColumns = ({
 			return (
 				<div className="flex justify-end gap-2">
 					<Dialog
+						// O estado de edicao e centralizado para garantir um unico modal aberto.
 						open={editingConhecimento?.id === item.id}
 						onOpenChange={(open) => setEditingConhecimento(open ? item : null)}
 					>

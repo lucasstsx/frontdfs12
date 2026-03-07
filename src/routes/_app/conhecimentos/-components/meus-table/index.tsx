@@ -26,6 +26,7 @@ export function MeusConhecimentosTable({
 	handleDelete,
 	handleSearchChange,
 }: MeusConhecimentosTableProps) {
+	// Colunas memoizadas evitam reset de estado interno da DataTable entre renders.
 	const columns = useMemo(
 		() =>
 			getColumns({

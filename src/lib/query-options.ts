@@ -34,6 +34,7 @@ export function adminConhecimentosListQueryOptions(
 	const page = params?.page ?? 1;
 
 	return queryOptions({
+		// A chave usa params normalizados para bater com a estrategia de invalidacao.
 		queryKey: queryKeys.conhecimentos.adminList({
 			titulo: normalizedTitulo,
 			page,
@@ -48,6 +49,7 @@ export function adminConhecimentosListQueryOptions(
 
 export function adminConhecimentosSummaryQueryOptions() {
 	return queryOptions({
+		// Summary do dashboard mostra amostra recente e total via meta.
 		queryKey: queryKeys.conhecimentos.adminSummary,
 		queryFn: () => conhecimentosService.list({ page: 1, limit: 5 }),
 	});
@@ -64,6 +66,7 @@ export function adminUsuariosListQueryOptions(params?: AdminUsuariosParams) {
 
 export function adminUsuariosSummaryQueryOptions() {
 	return queryOptions({
+		// Limit 1 reduz payload; o card usa principalmente o total vindo da meta.
 		queryKey: queryKeys.pessoas.adminSummary,
 		queryFn: () => pessoasService.listAll({ page: 1, limit: 1 }),
 	});

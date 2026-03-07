@@ -17,6 +17,7 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/_app/admin/usuarios")({
 	validateSearch: (search) => searchSchema.parse(search),
+	// A API hoje pagina no servidor; aqui o loader depende apenas da pagina.
 	loaderDeps: ({ search }) => ({ page: searchSchema.parse(search).page }),
 	loader: ({ context, deps }) =>
 		context.queryClient.ensureQueryData(adminUsuariosListQueryOptions(deps)),
@@ -42,6 +43,7 @@ function UsuariosPage() {
 	const usuarios = response?.data || [];
 	const meta = response?.meta || { totalPages: 1 };
 	const normalizedNome = nome.trim().toLocaleLowerCase("pt-BR");
+	// Busca de nome acontece no client somente sobre a pagina atual retornada pela API.
 	const usuariosFiltrados = usuarios.filter((item) => {
 		if (!normalizedNome) {
 			return true;
@@ -54,6 +56,7 @@ function UsuariosPage() {
 	const deleteMutation = useMutation({
 		mutationFn: (id: string) => pessoasService.delete(id),
 		onSuccess: (_, deletedId) => {
+			// Excluir usuario impacta totais do dashboard e cards/listas que exibem autor.
 			queryClient.invalidateQueries({
 				queryKey: queryKeys.pessoas.adminLists,
 			});
@@ -76,6 +79,7 @@ function UsuariosPage() {
 		mutationFn: ({ id, data }: { id: string; data: Partial<Pessoa> }) =>
 			pessoasService.update(id, data),
 		onSuccess: (updatedPessoa) => {
+			// Nome/contato do usuario aparece em varias telas; aqui garantimos o refresh cruzado.
 			queryClient.invalidateQueries({
 				queryKey: queryKeys.pessoas.adminLists,
 			});
@@ -107,6 +111,7 @@ function UsuariosPage() {
 	}, [deletingId, deleteMutation]);
 
 	const handleSearchChange = (value: string) => {
+		// Busca local no client, mas persistimos o termo na URL para manter estado ao navegar.
 		navigate({
 			search: (prev) => ({ ...prev, nome: value, page: 1 }),
 			replace: true,
@@ -114,6 +119,7 @@ function UsuariosPage() {
 	};
 
 	const handlePageChange = (newPage: number) => {
+		// Troca so a pagina para nao perder o filtro digitado.
 		navigate({
 			search: (prev) => ({ ...prev, page: newPage }),
 		});

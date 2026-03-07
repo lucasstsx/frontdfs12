@@ -94,6 +94,7 @@ export const getColumns = ({
 		header: "Nível",
 		cell: ({ row }) => {
 			const nivel = row.getValue("nivel") as string;
+			// Mantem a mesma leitura visual de nivel usada nos cards de explorar.
 
 			return (
 				<div className="text-center">
@@ -119,6 +120,7 @@ export const getColumns = ({
 			return (
 				<div className="flex justify-end gap-2">
 					<Dialog
+						// O estado global de edicao guarda apenas um id por vez para evitar modais simultaneos.
 						open={editingConhecimento?.id === item.id}
 						onOpenChange={(open) => setEditingConhecimento(open ? item : null)}
 					>

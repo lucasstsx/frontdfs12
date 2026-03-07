@@ -1,6 +1,7 @@
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
+import type { AxiosError } from "axios";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
@@ -29,6 +30,10 @@ const loginSchema = z.object({
 	senha: z.string().min(1, "A senha é obrigatória"),
 });
 
+type ApiErrorPayload = {
+	message?: string;
+};
+
 export function LoginForm({
 	className,
 	...props
@@ -39,21 +44,23 @@ export function LoginForm({
 		registered?: string;
 	};
 	const [error, setError] = useState<string | null>(null);
+	// Flag vindo do cadastro para mostrar feedback de sucesso no primeiro acesso ao login.
 	const showRegisteredSuccess = search.registered === "1";
 
 	const loginMutation = useMutation<
 		LoginResponse,
-		any,
+		AxiosError<ApiErrorPayload>,
 		z.infer<typeof loginSchema>
 	>({
 		mutationFn: (credentials) => authService.login(credentials),
 		onSuccess: (data) => {
 			authService.setToken(data.token);
 			const target = search.redirect || "/conhecimentos";
+			// Evita redirecionar para URL externa via querystring.
 			const safeTarget = target.startsWith("/") ? target : "/conhecimentos";
-			navigate({ to: safeTarget as any });
+			navigate({ to: safeTarget });
 		},
-		onError: (err: any) => {
+		onError: (err) => {
 			const message =
 				err.response?.data?.message || "E-mail ou senha inválidos.";
 			setError(message);
@@ -69,6 +76,7 @@ export function LoginForm({
 			onChange: loginSchema,
 		},
 		onSubmit: async ({ value }) => {
+			// Limpa feedback antigo para evitar erro "preso" entre tentativas.
 			setError(null);
 			loginMutation.mutate(value);
 		},

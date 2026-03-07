@@ -1,6 +1,6 @@
 import { jwtDecode } from "jwt-decode";
 import { api } from "../api";
-import { type Conhecimento } from "./conhecimentos.service";
+import type { Conhecimento } from "./conhecimentos.service";
 
 export interface UserTokenPayload {
 	id: string;
@@ -25,7 +25,11 @@ export interface UserProfile {
 }
 
 export const authService = {
-	async login(credentials: { email: string; senha: string }): Promise<LoginResponse> {
+	// Login retorna apenas token; o perfil completo e carregado em consulta separada.
+	async login(credentials: {
+		email: string;
+		senha: string;
+	}): Promise<LoginResponse> {
 		const { data } = await api.post<LoginResponse>("/auth/login", credentials);
 		return data;
 	},
@@ -46,12 +50,16 @@ export const authService = {
 		return data;
 	},
 
-	async updateProfile(id: string, userData: Partial<UserProfile>): Promise<UserProfile> {
+	async updateProfile(
+		id: string,
+		userData: Partial<UserProfile>,
+	): Promise<UserProfile> {
 		const { data } = await api.patch<UserProfile>(`/pessoas/${id}`, userData);
 		return data;
 	},
 
 	setToken(token: string) {
+		// Token fica no localStorage para manter sessao entre recarregamentos.
 		localStorage.setItem("token", token);
 	},
 
@@ -67,8 +75,10 @@ export const authService = {
 		const token = this.getToken();
 		if (!token) return null;
 		try {
+			// Decodificamos localmente para checar permissao/expiracao sem roundtrip.
 			return jwtDecode<UserTokenPayload>(token);
 		} catch {
+			// Token invalido no storage e tratado como sessao ausente.
 			return null;
 		}
 	},

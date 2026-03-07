@@ -69,6 +69,7 @@ function ConhecimentosPage() {
 	});
 
 	const conhecimentos = (response?.data || []).filter(
+		// A listagem publica depende de dados do autor; sem pessoa o card fica inconsistente.
 		(item): item is typeof item & { pessoa: NonNullable<typeof item.pessoa> } =>
 			Boolean(item.pessoa),
 	);
@@ -78,6 +79,7 @@ function ConhecimentosPage() {
 	const createMutation = useMutation({
 		mutationFn: conhecimentosService.create.bind(conhecimentosService),
 		onSuccess: () => {
+			// O mesmo dado aparece em "Meus conhecimentos", então precisamos atualizar o perfil também.
 			if (userToken?.id) {
 				queryClient.invalidateQueries({
 					queryKey: queryKeys.profile.byId(userToken.id),
@@ -90,6 +92,7 @@ function ConhecimentosPage() {
 
 	const handleCreateConhecimento = async (values: ConhecimentoValues) => {
 		if (userToken?.id) {
+			// O backend exige o autor explicito; aqui vinculamos o conhecimento ao usuario logado.
 			createMutation.mutate({ ...values, pessoaId: userToken.id });
 		}
 	};
@@ -231,6 +234,7 @@ function ConhecimentosPage() {
 									disabled={currentPage <= 1}
 									onClick={(e) => {
 										e.preventDefault();
+										// A paginacao vive na querystring para manter compartilhamento da URL.
 										navigate({
 											search: (prev) => ({ ...prev, page: currentPage - 1 }),
 										});
@@ -250,6 +254,7 @@ function ConhecimentosPage() {
 									disabled={currentPage >= meta.totalPages}
 									onClick={(e) => {
 										e.preventDefault();
+										// A paginacao vive na querystring para manter compartilhamento da URL.
 										navigate({
 											search: (prev) => ({ ...prev, page: currentPage + 1 }),
 										});

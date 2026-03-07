@@ -10,6 +10,7 @@ import {
 
 export const Route = createFileRoute("/_app/admin/")({
 	loader: ({ context }) =>
+		// Precarrega os dois blocos do dashboard para evitar loading em cascata.
 		Promise.all([
 			context.queryClient.ensureQueryData(adminUsuariosSummaryQueryOptions()),
 			context.queryClient.ensureQueryData(
@@ -46,6 +47,7 @@ function AdminDashboard() {
 	}
 
 	const stats = [
+		// Cards combinam totais vindos da API com derivacoes locais simples.
 		{
 			title: "Total de Usuários",
 			value: totalUsuarios,

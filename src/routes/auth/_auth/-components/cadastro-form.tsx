@@ -1,6 +1,7 @@
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
+import type { AxiosError } from "axios";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
@@ -35,12 +36,17 @@ const cadastroSchema = z
 		senha: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
 		confirmarSenha: z.string().min(1, "Confirme sua senha"),
 	})
+	// Regra de UX do formulario: bloquear submit quando senha e confirmacao divergem.
 	.refine((data) => data.senha === data.confirmarSenha, {
 		message: "As senhas nao coincidem",
 		path: ["confirmarSenha"],
 	});
 
 type CadastroFormData = z.infer<typeof cadastroSchema>;
+
+type ApiErrorPayload = {
+	message?: string;
+};
 
 export function CadastroForm({
 	className,
@@ -51,19 +57,20 @@ export function CadastroForm({
 
 	const registerMutation = useMutation<
 		UserProfile,
-		any,
+		AxiosError<ApiErrorPayload>,
 		Omit<CadastroFormData, "confirmarSenha">
 	>({
 		mutationFn: (payload) => authService.register(payload),
 		onSuccess: () => {
+			// Depois de cadastrar, voltamos para login com um sinal para exibir mensagem de sucesso.
 			navigate({
 				to: "/auth/login",
 				search: {
 					registered: "1",
 				},
-			} as any);
+			});
 		},
-		onError: (err: any) => {
+		onError: (err) => {
 			const message =
 				err.response?.data?.message ||
 				"Nao foi possivel concluir seu cadastro. Tente novamente.";
@@ -84,7 +91,9 @@ export function CadastroForm({
 			onChange: cadastroSchema,
 		},
 		onSubmit: async ({ value }) => {
+			// Evita reapresentar erro antigo apos o usuario corrigir os campos.
 			setError(null);
+			// Confirmacao de senha e usada so no front, nao faz parte do payload da API.
 			const { confirmarSenha: _, ...payload } = value;
 			registerMutation.mutate(payload);
 		},

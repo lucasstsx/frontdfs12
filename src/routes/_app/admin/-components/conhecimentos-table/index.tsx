@@ -1,7 +1,7 @@
 import { useMemo } from "react";
+import type { ConhecimentoValues } from "#/components/ConhecimentoForm";
 import { DataTable } from "#/components/ui/data-table/data-table";
-import { type Conhecimento } from "#/lib/services/conhecimentos.service";
-import { type ConhecimentoValues } from "#/components/ConhecimentoForm";
+import type { Conhecimento } from "#/lib/services/conhecimentos.service";
 import { getColumns } from "./columns";
 
 interface ConhecimentosAdminTableProps {
@@ -33,6 +33,7 @@ export function ConhecimentosAdminTable({
 	pageIndex,
 	onPageChange,
 }: ConhecimentosAdminTableProps) {
+	// Evita recriar colunas a cada render e perder estado interno da tabela (sort, width, etc).
 	const columns = useMemo(
 		() =>
 			getColumns({
@@ -44,12 +45,12 @@ export function ConhecimentosAdminTable({
 				handleDelete,
 			}),
 		[
-			editingConhecimento, 
-			setEditingConhecimento, 
-			handleEdit, 
-			deletingId, 
-			setDeletingId, 
-			handleDelete
+			editingConhecimento,
+			setEditingConhecimento,
+			handleEdit,
+			deletingId,
+			setDeletingId,
+			handleDelete,
 		],
 	);
 

@@ -1,17 +1,23 @@
-import { createFileRoute, Outlet, redirect, Link } from "@tanstack/react-router";
-import { authService } from "#/lib/services/auth.service";
-import { 
-	LayoutDashboard, 
-	Users, 
-	BookOpen, 
+import {
+	createFileRoute,
+	Link,
+	Outlet,
+	redirect,
+} from "@tanstack/react-router";
+import {
+	BookOpen,
+	ChevronRight,
+	LayoutDashboard,
 	ShieldCheck,
-	ChevronRight
+	Users,
 } from "lucide-react";
+import { authService } from "#/lib/services/auth.service";
 import { cn } from "#/lib/utils";
 
 export const Route = createFileRoute("/_app/admin")({
 	beforeLoad: () => {
 		const user = authService.getUserFromToken();
+		// Guard de autorizacao: apenas admins acessam o painel.
 		if (!user?.isAdmin) {
 			throw redirect({
 				to: "/conhecimentos",
@@ -24,6 +30,7 @@ export const Route = createFileRoute("/_app/admin")({
 function AdminLayout() {
 	return (
 		<div className="container mx-auto px-4 py-8 max-w-7xl">
+			{/* Sidebar concentra navegacao do painel para manter contexto administrativo. */}
 			<div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8">
 				<aside className="flex flex-col gap-2">
 					<div className="px-4 py-4 mb-4 bg-primary/5 rounded-2xl border-2 border-primary/10 flex items-center gap-3">
@@ -31,8 +38,12 @@ function AdminLayout() {
 							<ShieldCheck size={20} />
 						</div>
 						<div>
-							<h2 className="font-bold text-primary text-sm uppercase tracking-tight">Painel Admin</h2>
-							<p className="text-[10px] text-muted-foreground font-bold italic">Acesso Restrito</p>
+							<h2 className="font-bold text-primary text-sm uppercase tracking-tight">
+								Painel Admin
+							</h2>
+							<p className="text-[10px] text-muted-foreground font-bold italic">
+								Acesso Restrito
+							</p>
 						</div>
 					</div>
 
@@ -60,14 +71,14 @@ function AdminLayout() {
 	);
 }
 
-function AdminNavLink({ 
-	to, 
-	children, 
-	activeOptions 
-}: { 
-	to: string, 
-	children: React.ReactNode,
-	activeOptions?: { exact?: boolean }
+function AdminNavLink({
+	to,
+	children,
+	activeOptions,
+}: {
+	to: string;
+	children: React.ReactNode;
+	activeOptions?: { exact?: boolean };
 }) {
 	return (
 		<Link
@@ -80,9 +91,7 @@ function AdminNavLink({
 				className: "bg-primary! text-white! border-primary! shadow-md",
 			}}
 		>
-			<span className="flex items-center gap-3">
-				{children}
-			</span>
+			<span className="flex items-center gap-3">{children}</span>
 			<ChevronRight size={14} className="opacity-50" />
 		</Link>
 	);

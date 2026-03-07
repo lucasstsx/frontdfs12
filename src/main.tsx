@@ -28,8 +28,10 @@ const queryClient = new QueryClient({
 const router = getRouter(queryClient);
 
 if (typeof window !== "undefined") {
+	// Evento global disparado pelos interceptors quando a API retorna 401.
 	window.addEventListener(AUTH_UNAUTHORIZED_EVENT, async () => {
 		await router.invalidate();
+		// Redireciona para login para reconstruir sessao apos token invalido/expirado.
 		await router.navigate({ to: "/auth/login" });
 	});
 }

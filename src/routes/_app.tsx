@@ -24,6 +24,7 @@ import {
 
 export const Route = createFileRoute("/_app")({
 	beforeLoad: ({ location }) => {
+		// Toda area /_app exige sessao valida; sem token redireciona para login com retorno.
 		if (!authService.isAuthenticated()) {
 			throw redirect({
 				to: "/auth/login",
@@ -132,6 +133,7 @@ function AppLayout() {
 
 	const handleLogout = () => {
 		authService.logout();
+		// Invalida o contexto de rotas para limpar dados dependentes de autenticacao.
 		router.invalidate();
 		router.navigate({ to: "/" });
 	};

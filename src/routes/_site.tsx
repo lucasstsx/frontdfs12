@@ -9,6 +9,7 @@ export const Route = createFileRoute("/_site")({
 function SiteLayout() {
 	return (
 		<div className="flex min-h-screen flex-col bg-background text-foreground">
+			{/* Layout publico reaproveita Header/Footer e troca apenas o miolo por rota. */}
 			<Header />
 			<main className="flex-1">
 				<Outlet />
