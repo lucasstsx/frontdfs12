@@ -1,65 +1,51 @@
+import { useQuery } from "@tanstack/react-query";
 import {
 	BookOpen,
 	ChefHat,
 	Code2,
-	Dumbbell,
 	Languages,
+	Loader2,
 	Music,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import type { CarouselItem } from "#/components/Carousel";
-import Carousel from "#/components/Carousel";
+import { conhecimentosLandingQueryOptions } from "#/lib/query-options";
 import { SectionWrapper } from "./SectionWrapper";
 
-const ofertas: CarouselItem[] = [
-	{
-		id: 1,
-		title: "Programação Web",
-		description:
-			"Bruno Alves · Desenvolvedor Back-end ~ Ensino fundamentos de Node.js, APIs REST e bancos de dados. Ideal para quem quer entrar no mercado de tecnologia.",
-		icon: <Code2 className="h-4 w-4 text-primary" />,
-	},
-	{
-		id: 2,
-		title: "Culinária Italiana",
-		description:
-			"Ana Ferreira · Chef de Cozinha ~ Compartilho receitas autênticas e técnicas profissionais. Do básico ao avançado, aprender a cozinhar é para todos.",
-		icon: <ChefHat className="h-4 w-4 text-primary" />,
-	},
-	{
-		id: 3,
-		title: "Violão & Harmonia",
-		description:
-			"Carlos Menezes · Professor de Música ~ Aulas de violão do zero ao intermediário, com foco em harmonia prática e leitura de cifras.",
-		icon: <Music className="h-4 w-4 text-primary" />,
-	},
-	{
-		id: 4,
-		title: "Inglês Conversacional",
-		description:
-			"Maria Santos · Professora de Idiomas ~ Metodologia imersiva para ganhar fluência. Foco em situações do dia a dia e do mundo profissional.",
-		icon: <Languages className="h-4 w-4 text-primary" />,
-	},
-	{
-		id: 5,
-		title: "Design de Interfaces",
-		description:
-			"Pedro Lima · Designer UI/UX ~ Ensino Figma, princípios de design e como criar experiências digitais que encantam os usuários.",
-		icon: <BookOpen className="h-4 w-4 text-primary" />,
-	},
-	{
-		id: 6,
-		title: "Treino Funcional",
-		description:
-			"Sofia Costa · Personal Trainer ~ Montagem de treinos personalizados e orientação nutricional básica para quem quer saúde e bem-estar.",
-		icon: <Dumbbell className="h-4 w-4 text-primary" />,
-	},
-];
+const Carousel = lazy(() => import("#/components/Carousel"));
+
+const categoryIcons: Record<string, React.ReactNode> = {
+	TECNOLOGIA: <Code2 className="h-4 w-4 text-primary" />,
+	MUSICA: <Music className="h-4 w-4 text-primary" />,
+	IDIOMAS: <Languages className="h-4 w-4 text-primary" />,
+	ARTES: <BookOpen className="h-4 w-4 text-primary" />,
+	EDUCACAO: <BookOpen className="h-4 w-4 text-primary" />,
+	OUTROS: <ChefHat className="h-4 w-4 text-primary" />,
+};
 
 export function ConhecimentosCarrosselSection() {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [carouselWidth, setCarouselWidth] = useState(380);
+
+	// Busca conhecimentos reais da API para o carrossel
+	const { data: response, isLoading } = useQuery({
+		...conhecimentosLandingQueryOptions(),
+	});
+
+	const conhecimentos = response?.data || [];
+
+	const carouselItems = useMemo<CarouselItem[]>(() => {
+		if (!Array.isArray(conhecimentos) || conhecimentos.length === 0) return [];
+		return conhecimentos.slice(0, 6).map((item, index) => ({
+			id: Number.parseInt(item.id.slice(0, 8), 16) || index + 1,
+			title: item.titulo,
+			description: `${item.pessoa?.nome || "Membro"} · ${item.categoria} ~ ${item.descricao}`,
+			icon: categoryIcons[item.categoria] || (
+				<BookOpen className="h-4 w-4 text-primary" />
+			),
+		}));
+	}, [conhecimentos]);
 
 	useEffect(() => {
 		const update = () => {
@@ -92,15 +78,32 @@ export function ConhecimentosCarrosselSection() {
 				</div>
 
 				{/* Carousel */}
-				<div ref={containerRef} className="flex-1">
-					<Carousel
-						items={ofertas}
-						baseWidth={carouselWidth}
-						autoplay
-						autoplayDelay={4000}
-						pauseOnHover
-						loop
-					/>
+				<div
+					ref={containerRef}
+					className="flex-1 min-h-[300px] flex items-center justify-center"
+				>
+					{isLoading ? (
+						<Loader2 size={40} className="text-primary animate-spin" />
+					) : carouselItems.length > 0 ? (
+						<Suspense
+							fallback={
+								<Loader2 size={40} className="text-primary animate-spin" />
+							}
+						>
+							<Carousel
+								items={carouselItems}
+								baseWidth={carouselWidth}
+								autoplay
+								autoplayDelay={4000}
+								pauseOnHover
+								loop
+							/>
+						</Suspense>
+					) : (
+						<div className="text-center text-muted-foreground italic">
+							Novos conhecimentos em breve...
+						</div>
+					)}
 				</div>
 			</motion.div>
 		</SectionWrapper>

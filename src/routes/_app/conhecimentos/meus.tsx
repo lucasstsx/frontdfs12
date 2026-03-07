@@ -1,8 +1,8 @@
-import {
-	createFileRoute,
-} from "@tanstack/react-router";
-import { BookOpen, Plus } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { BookOpen, Loader2, Plus } from "lucide-react";
+import { motion } from "motion/react";
+import { useCallback, useMemo, useState } from "react";
 import { z } from "zod";
 import {
 	ConhecimentoForm,
@@ -17,22 +17,14 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "#/components/ui/dialog";
+import { queryKeys } from "#/lib/query-keys";
+import { profileQueryOptions } from "#/lib/query-options";
+import { authService } from "#/lib/services/auth.service";
+import {
+	type Conhecimento,
+	conhecimentosService,
+} from "#/lib/services/conhecimentos.service";
 import { MeusConhecimentosTable } from "./-components/meus-table";
-
-// Mock de dados do usuário logado
-const MEUS_CONHECIMENTOS = [
-	{
-		id: "1",
-		titulo: "Lógica de Programação com Python",
-		descricao:
-			"Aprenda os fundamentos da programação do zero usando a linguagem Python. Variáveis, loops e funções.",
-		categoria: "TECNOLOGIA",
-		nivel: "BASICO",
-		criadoEm: "2024-03-01T10:00:00Z",
-	},
-];
-
-type Conhecimento = (typeof MEUS_CONHECIMENTOS)[0];
 
 const searchSchema = z.object({
 	titulo: z.string().optional().default(""),
@@ -40,37 +32,121 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/_app/conhecimentos/meus")({
 	validateSearch: (search) => searchSchema.parse(search),
+	loader: ({ context }) => {
+		const user = authService.getUserFromToken();
+		if (!user?.id) {
+			return null;
+		}
+
+		return context.queryClient.ensureQueryData(profileQueryOptions(user.id));
+	},
 	component: MeusConhecimentosPage,
 });
 
 function MeusConhecimentosPage() {
 	const navigate = Route.useNavigate();
 	const { titulo } = Route.useSearch();
+	const queryClient = useQueryClient();
+	const userToken = authService.getUserFromToken();
+
 	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 	const [editingConhecimento, setEditingConhecimento] =
 		useState<Conhecimento | null>(null);
 	const [deletingId, setDeletingId] = useState<string | null>(null);
 
-	const handleCreate = useCallback(async (values: ConhecimentoValues) => {
-		console.log("Criando:", values);
-		await new Promise((r) => setTimeout(r, 1000));
-		setIsCreateModalOpen(false);
-	}, []);
+	// Busca os dados do perfil (que contém os conhecimentos do usuário)
+	const {
+		data: profile,
+		isLoading,
+		error,
+	} = useQuery({
+		...profileQueryOptions(userToken?.id || ""),
+	});
+
+	const meusConhecimentos = profile?.conhecimentos || [];
+	const normalizedTitulo = titulo.trim().toLocaleLowerCase("pt-BR");
+
+	// Filtragem local baseada na busca por título
+	const filteredData = useMemo(
+		() =>
+			meusConhecimentos.filter((item) => {
+				if (!normalizedTitulo) {
+					return true;
+				}
+
+				return item.titulo
+					.toLocaleLowerCase("pt-BR")
+					.includes(normalizedTitulo);
+			}),
+		[meusConhecimentos, normalizedTitulo],
+	);
+
+	// Mutação para criar
+	const createMutation = useMutation({
+		mutationFn: conhecimentosService.create.bind(conhecimentosService),
+		onSuccess: () => {
+			if (userToken?.id) {
+				queryClient.invalidateQueries({
+					queryKey: queryKeys.profile.byId(userToken.id),
+				});
+			}
+			queryClient.invalidateQueries({ queryKey: queryKeys.conhecimentos.all });
+			setIsCreateModalOpen(false);
+		},
+	});
+
+	// Mutação para editar
+	const updateMutation = useMutation({
+		mutationFn: ({ id, data }: { id: string; data: Partial<Conhecimento> }) =>
+			conhecimentosService.update(id, data),
+		onSuccess: () => {
+			if (userToken?.id) {
+				queryClient.invalidateQueries({
+					queryKey: queryKeys.profile.byId(userToken.id),
+				});
+			}
+			queryClient.invalidateQueries({ queryKey: queryKeys.conhecimentos.all });
+			setEditingConhecimento(null);
+		},
+	});
+
+	// Mutação para excluir
+	const deleteMutation = useMutation({
+		mutationFn: (id: string) => conhecimentosService.delete(id),
+		onSuccess: () => {
+			if (userToken?.id) {
+				queryClient.invalidateQueries({
+					queryKey: queryKeys.profile.byId(userToken.id),
+				});
+			}
+			queryClient.invalidateQueries({ queryKey: queryKeys.conhecimentos.all });
+			setDeletingId(null);
+		},
+	});
+
+	const handleCreate = useCallback(
+		async (values: ConhecimentoValues) => {
+			if (userToken?.id) {
+				createMutation.mutate({ ...values, pessoaId: userToken.id });
+			}
+		},
+		[createMutation, userToken],
+	);
 
 	const handleEdit = useCallback(
 		async (values: ConhecimentoValues) => {
-			console.log("Editando:", editingConhecimento?.id, values);
-			await new Promise((r) => setTimeout(r, 1000));
-			setEditingConhecimento(null);
+			if (editingConhecimento) {
+				updateMutation.mutate({ id: editingConhecimento.id, data: values });
+			}
 		},
-		[editingConhecimento],
+		[editingConhecimento, updateMutation],
 	);
 
 	const handleDelete = useCallback(async () => {
-		console.log("Excluindo:", deletingId);
-		await new Promise((r) => setTimeout(r, 1000));
-		setDeletingId(null);
-	}, [deletingId]);
+		if (deletingId) {
+			deleteMutation.mutate(deletingId);
+		}
+	}, [deletingId, deleteMutation]);
 
 	const handleSearchChange = (value: string) => {
 		navigate({
@@ -80,7 +156,12 @@ function MeusConhecimentosPage() {
 	};
 
 	return (
-		<div className="container mx-auto px-4 py-8 max-w-5xl">
+		<motion.div
+			initial={{ opacity: 0, y: 20 }}
+			animate={{ opacity: 1, y: 0 }}
+			transition={{ duration: 0.5 }}
+			className="container mx-auto px-4 py-8 max-w-5xl"
+		>
 			<div className="flex flex-col gap-8">
 				<div className="flex flex-col md:flex-row justify-between items-center gap-4">
 					<div className="flex flex-col gap-2 text-center md:text-left">
@@ -112,16 +193,35 @@ function MeusConhecimentosPage() {
 								<ConhecimentoForm
 									onSubmit={handleCreate}
 									onCancel={() => setIsCreateModalOpen(false)}
-									buttonText="Publicar"
+									buttonText={
+										createMutation.isPending ? "Publicando..." : "Publicar"
+									}
+									isSubmitting={createMutation.isPending}
 								/>
 							</div>
 						</DialogContent>
 					</Dialog>
 				</div>
 
-				{MEUS_CONHECIMENTOS.length > 0 ? (
+				{isLoading ? (
+					<div className="flex flex-col items-center justify-center py-20">
+						<Loader2 size={48} className="text-primary animate-spin mb-4" />
+						<p className="text-muted-foreground font-bold">
+							Carregando seus saberes...
+						</p>
+					</div>
+				) : error ? (
+					<div className="flex flex-col items-center justify-center py-20 text-center bg-destructive/5 rounded-3xl border-2 border-dashed border-destructive/20">
+						<h3 className="text-xl font-bold text-destructive">
+							Erro ao carregar seus dados
+						</h3>
+						<p className="text-muted-foreground max-w-xs mt-1">
+							Verifique sua conexão ou se o backend está ativo.
+						</p>
+					</div>
+				) : meusConhecimentos.length > 0 ? (
 					<MeusConhecimentosTable
-						data={MEUS_CONHECIMENTOS}
+						data={filteredData}
 						titulo={titulo}
 						editingConhecimento={editingConhecimento}
 						setEditingConhecimento={setEditingConhecimento}
@@ -152,6 +252,6 @@ function MeusConhecimentosPage() {
 					</div>
 				)}
 			</div>
-		</div>
+		</motion.div>
 	);
 }

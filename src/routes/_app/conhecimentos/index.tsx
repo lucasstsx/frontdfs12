@@ -1,9 +1,8 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import {
-	BookOpen,
-	Plus,
-} from "lucide-react";
-import { useMemo, useState } from "react";
+import { BookOpen, Loader2, Plus } from "lucide-react";
+import { motion } from "motion/react";
+import { useState } from "react";
 import { z } from "zod";
 import {
 	ConhecimentoForm,
@@ -16,17 +15,12 @@ import {
 	DialogDescription,
 	DialogHeader,
 	DialogTitle,
-	DialogTrigger,
 } from "#/components/ui/dialog";
-import {
-	Pagination,
-	PaginationContent,
-	PaginationItem,
-	PaginationLink,
-	PaginationNext,
-	PaginationPrevious,
-} from "#/components/ui/pagination";
-import { ConhecimentoCard, type Conhecimento } from "./-components/ConhecimentoCard";
+import { queryKeys } from "#/lib/query-keys";
+import { conhecimentosListQueryOptions } from "#/lib/query-options";
+import { authService } from "#/lib/services/auth.service";
+import { conhecimentosService } from "#/lib/services/conhecimentos.service";
+import { ConhecimentoCard } from "./-components/ConhecimentoCard";
 import { ConhecimentoFilters } from "./-components/ConhecimentoFilters";
 
 export const conhecimentosSearchSchema = z.object({
@@ -50,119 +44,60 @@ export const conhecimentosSearchSchema = z.object({
 	page: z.number().int().min(1).optional().catch(1),
 });
 
-const MOCK_CONHECIMENTOS: Conhecimento[] = [
-	{
-		id: "1",
-		titulo: "Lógica de Programação com Python",
-		descricao:
-			"Aprenda os fundamentos da programação do zero usando a linguagem Python. Variáveis, loops e funções.",
-		categoria: "TECNOLOGIA",
-		nivel: "BASICO",
-		pessoa: {
-			id: "p1",
-			nome: "Lucas Silva",
-			email: "lucas@teste.com",
-			telefone: "(11) 99999-9999",
-		},
-		criadoEm: "2024-03-01T10:00:00Z",
-	},
-	{
-		id: "2",
-		titulo: "Violão Clássico: Nível Médio",
-		descricao:
-			"Técnicas avançadas de dedilhado e leitura de partitura para violão erudito.",
-		categoria: "MUSICA",
-		nivel: "INTERMEDIARIO",
-		pessoa: {
-			id: "p2",
-			nome: "Ana Costa",
-			email: "ana@musica.com",
-			telefone: "(21) 88888-8888",
-		},
-		criadoEm: "2024-03-02T15:30:00Z",
-	},
-	{
-		id: "3",
-		titulo: "Inglês para Negócios",
-		descricao:
-			"Prepare-se para reuniões, apresentações e negociações em ambiente corporativo internacional.",
-		categoria: "IDIOMAS",
-		nivel: "AVANCADO",
-		pessoa: {
-			id: "p3",
-			nome: "John Doe",
-			email: "john@english.com",
-			telefone: "(11) 77777-7777",
-		},
-		criadoEm: "2024-03-03T09:00:00Z",
-	},
-	{
-		id: "4",
-		titulo: "Pintura em Aquarela",
-		descricao:
-			"Workshop prático de técnicas de transparência e mistura de cores com aquarela.",
-		categoria: "ARTES",
-		nivel: "BASICO",
-		pessoa: {
-			id: "p4",
-			nome: "Maria Arte",
-			email: "maria@artes.com",
-			telefone: "(31) 66666-6666",
-		},
-		criadoEm: "2024-03-04T14:00:00Z",
-	},
-	{
-		id: "5",
-		titulo: "Matemática para Concursos",
-		descricao:
-			"Resolução de problemas de lógica e álgebra focados nos principais editais do país.",
-		categoria: "EDUCACAO",
-		nivel: "INTERMEDIARIO",
-		pessoa: {
-			id: "p5",
-			nome: "Professor Carlos",
-			email: "carlos@edu.com",
-			telefone: "(41) 55555-5555",
-		},
-		criadoEm: "2024-03-05T11:00:00Z",
-	},
-];
-
 export const Route = createFileRoute("/_app/conhecimentos/")({
 	validateSearch: (search) => conhecimentosSearchSchema.parse(search),
+	loaderDeps: ({ search }) => conhecimentosSearchSchema.parse(search),
+	loader: ({ context, deps }) =>
+		context.queryClient.ensureQueryData(conhecimentosListQueryOptions(deps)),
 	component: ConhecimentosPage,
 });
 
 function ConhecimentosPage() {
 	const searchParams = Route.useSearch();
 	const navigate = Route.useNavigate();
+	const queryClient = useQueryClient();
+	const userToken = authService.getUserFromToken();
 	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-	const filteredData = useMemo(() => {
-		return MOCK_CONHECIMENTOS.filter((item) => {
-			const matchesSearch =
-				!searchParams.busca ||
-				item.titulo.toLowerCase().includes(searchParams.busca.toLowerCase()) ||
-				item.descricao.toLowerCase().includes(searchParams.busca.toLowerCase());
+	// Busca de conhecimentos reais via API
+	const {
+		data: response,
+		isLoading,
+		error,
+	} = useQuery({
+		...conhecimentosListQueryOptions(searchParams),
+	});
 
-			const matchesCategory =
-				searchParams.categoria === "TODOS" ||
-				item.categoria === searchParams.categoria;
-			const matchesLevel =
-				searchParams.nivel === "TODOS" || item.nivel === searchParams.nivel;
+	const conhecimentos = (response?.data || []).filter(
+		(item): item is typeof item & { pessoa: NonNullable<typeof item.pessoa> } =>
+			Boolean(item.pessoa),
+	);
+	const meta = response?.meta || { totalPages: 1 };
 
-			return matchesSearch && matchesCategory && matchesLevel;
-		});
-	}, [searchParams]);
+	// Mutação para criar conhecimento
+	const createMutation = useMutation({
+		mutationFn: conhecimentosService.create.bind(conhecimentosService),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: queryKeys.conhecimentos.all });
+			setIsCreateModalOpen(false);
+		},
+	});
 
 	const handleCreateConhecimento = async (values: ConhecimentoValues) => {
-		console.log("Novo conhecimento via modal:", values);
-		await new Promise((resolve) => setTimeout(resolve, 1000));
-		setIsCreateModalOpen(false);
+		if (userToken?.id) {
+			createMutation.mutate({ ...values, pessoaId: userToken.id });
+		}
 	};
 
+	const currentPage = searchParams.page ?? 1;
+
 	return (
-		<div className="container mx-auto px-4 py-8 max-w-7xl">
+		<motion.div
+			initial={{ opacity: 0, y: 20 }}
+			animate={{ opacity: 1, y: 0 }}
+			transition={{ duration: 0.5 }}
+			className="container mx-auto px-4 py-8 max-w-7xl"
+		>
 			<div className="flex flex-col gap-8">
 				<div className="flex flex-col md:flex-row justify-between items-center gap-4">
 					<div className="flex flex-col gap-2 text-center md:text-left">
@@ -175,13 +110,15 @@ function ConhecimentosPage() {
 						</p>
 					</div>
 
+					<Button
+						onClick={() => setIsCreateModalOpen(true)}
+						className="flex items-center gap-2 px-6 py-6 rounded-xl font-bold shadow-lg transition-all hover:scale-105 whitespace-nowrap"
+					>
+						<Plus size={20} />
+						Criar Conhecimento
+					</Button>
+
 					<Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-						<DialogTrigger asChild>
-							<Button className="flex items-center gap-2 px-6 py-6 rounded-xl font-bold shadow-lg transition-all hover:scale-105 whitespace-nowrap">
-								<Plus size={20} />
-								Criar Conhecimento
-							</Button>
-						</DialogTrigger>
 						<DialogContent className="sm:max-w-[600px] p-0 overflow-hidden border-2 gap-0">
 							<DialogHeader className="p-6 bg-muted/5 border-b">
 								<DialogTitle className="text-2xl font-extrabold text-primary">
@@ -195,7 +132,12 @@ function ConhecimentosPage() {
 								<ConhecimentoForm
 									onSubmit={handleCreateConhecimento}
 									onCancel={() => setIsCreateModalOpen(false)}
-									buttonText="Publicar Conhecimento"
+									buttonText={
+										createMutation.isPending
+											? "Publicando..."
+											: "Publicar Conhecimento"
+									}
+									isSubmitting={createMutation.isPending}
 								/>
 							</div>
 						</DialogContent>
@@ -208,18 +150,60 @@ function ConhecimentosPage() {
 					<div className="flex flex-col gap-6">
 						<div className="flex justify-between items-center px-2">
 							<span className="text-sm text-muted-foreground font-medium italic">
-								Mostrando {filteredData.length} conhecimentos encontrados
+								{isLoading
+									? "Buscando conhecimentos..."
+									: `Mostrando ${conhecimentos.length} conhecimentos encontrados`}
 							</span>
 						</div>
 
-						{filteredData.length > 0 ? (
-							<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-								{filteredData.map((item) => (
-									<ConhecimentoCard key={item.id} item={item} />
-								))}
+						{isLoading ? (
+							<div className="flex flex-col items-center justify-center py-20">
+								<Loader2 size={48} className="text-primary animate-spin mb-4" />
+								<p className="text-muted-foreground font-bold">
+									Carregando saberes...
+								</p>
 							</div>
+						) : error ? (
+							<div className="flex flex-col items-center justify-center py-20 text-center bg-destructive/5 rounded-3xl border-2 border-dashed border-destructive/20">
+								<h3 className="text-xl font-bold text-destructive">
+									Erro ao carregar dados
+								</h3>
+								<p className="text-muted-foreground max-w-xs mt-1">
+									Não foi possível conectar ao servidor. Verifique se the
+									backend está rodando localmente.
+								</p>
+							</div>
+						) : conhecimentos.length > 0 ? (
+							<motion.div
+								variants={{
+									hidden: { opacity: 0 },
+									show: {
+										opacity: 1,
+										transition: { staggerChildren: 0.1 },
+									},
+								}}
+								initial="hidden"
+								animate="show"
+								className="grid grid-cols-1 md:grid-cols-2 gap-6"
+							>
+								{conhecimentos.map((item) => (
+									<motion.div
+										key={item.id}
+										variants={{
+											hidden: { opacity: 0, y: 20 },
+											show: { opacity: 1, y: 0 },
+										}}
+									>
+										<ConhecimentoCard item={item} />
+									</motion.div>
+								))}
+							</motion.div>
 						) : (
-							<div className="flex flex-col items-center justify-center py-20 text-center bg-muted/10 rounded-3xl border-2 border-dashed border-secondary/20">
+							<motion.div
+								initial={{ opacity: 0, scale: 0.95 }}
+								animate={{ opacity: 1, scale: 1 }}
+								className="flex flex-col items-center justify-center py-20 text-center bg-muted/10 rounded-3xl border-2 border-dashed border-secondary/20"
+							>
 								<BookOpen
 									size={48}
 									className="text-muted-foreground mb-4 opacity-20"
@@ -231,52 +215,49 @@ function ConhecimentosPage() {
 									Tente ajustar seus filtros ou termos de busca para encontrar o
 									que procura.
 								</p>
-							</div>
+							</motion.div>
 						)}
 
-						{filteredData.length > 0 && (
-							<div className="mt-8">
-								<Pagination>
-									<PaginationContent>
-										<PaginationItem>
-											<PaginationPrevious
-												disabled={searchParams.page === 1}
-												onClick={() =>
-													navigate({
-														search: (prev) => ({
-															...prev,
-															page: Math.max(1, (prev.page ?? 1) - 1),
-														}),
-													})
-												}
-												className="cursor-pointer"
-											/>
-										</PaginationItem>
-										<PaginationItem>
-											<PaginationLink isActive>
-												{searchParams.page}
-											</PaginationLink>
-										</PaginationItem>
-										<PaginationItem>
-											<PaginationNext
-												onClick={() =>
-													navigate({
-														search: (prev) => ({
-															...prev,
-															page: (prev.page ?? 1) + 1,
-														}),
-													})
-												}
-												className="cursor-pointer"
-											/>
-										</PaginationItem>
-									</PaginationContent>
-								</Pagination>
+						{!isLoading && meta.totalPages > 1 && (
+							<div className="mt-8 flex items-center justify-end space-x-2">
+								<Button
+									variant="outline"
+									size="sm"
+									disabled={currentPage <= 1}
+									onClick={(e) => {
+										e.preventDefault();
+										navigate({
+											search: (prev) => ({ ...prev, page: currentPage - 1 }),
+										});
+									}}
+									className="font-bold border-2"
+								>
+									Anterior
+								</Button>
+
+								<div className="text-xs font-bold text-muted-foreground uppercase px-2">
+									Página {currentPage} de {meta.totalPages}
+								</div>
+
+								<Button
+									variant="outline"
+									size="sm"
+									disabled={currentPage >= meta.totalPages}
+									onClick={(e) => {
+										e.preventDefault();
+										navigate({
+											search: (prev) => ({ ...prev, page: currentPage + 1 }),
+										});
+									}}
+									className="font-bold border-2"
+								>
+									Próximo
+								</Button>
 							</div>
 						)}
 					</div>
 				</div>
 			</div>
-		</div>
+		</motion.div>
 	);
 }

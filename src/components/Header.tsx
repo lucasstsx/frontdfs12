@@ -1,8 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import { MenuIcon, X } from "lucide-react";
-import { createContext, type ReactNode, useContext, useState } from "react";
+import { createContext, type ReactNode, useContext, useState, useEffect } from "react";
 import { cn } from "#/lib/utils";
 import { Logo } from "./Logo";
+import { motion, AnimatePresence } from "motion/react";
 
 // contexto para gerenciar o estado do menu mobile entre os subcomponentes
 const HeaderContext = createContext<{
@@ -10,7 +11,7 @@ const HeaderContext = createContext<{
 	setIsMobileMenuOpen: (open: boolean) => void;
 } | null>(null);
 
-function useHeader() {
+export function useHeader() {
 	const context = useContext(HeaderContext);
 	if (!context) {
 		throw new Error("Header components must be used within a HeaderRoot");
@@ -25,6 +26,18 @@ interface HeaderRootProps {
 
 export function HeaderRoot({ children, className }: HeaderRootProps) {
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+	// Bloqueia o scroll quando o menu mobile está aberto
+	useEffect(() => {
+		if (isMobileMenuOpen) {
+			document.body.style.overflow = "hidden";
+		} else {
+			document.body.style.overflow = "unset";
+		}
+		return () => {
+			document.body.style.overflow = "unset";
+		};
+	}, [isMobileMenuOpen]);
 
 	return (
 		<HeaderContext.Provider value={{ isMobileMenuOpen, setIsMobileMenuOpen }}>
@@ -71,7 +84,7 @@ export function HeaderNav({
 	className?: string;
 }) {
 	return (
-		<div className={cn("hidden items-center space-x-8 md:flex", className)}>
+		<div className={cn("hidden items-center space-x-8 lg:flex", className)}>
 			{children}
 		</div>
 	);
@@ -94,14 +107,14 @@ export function HeaderActions({
 export function HeaderMobileToggle() {
 	const { setIsMobileMenuOpen } = useHeader();
 	return (
-		<div className="flex items-center md:hidden">
+		<div className="flex items-center lg:hidden">
 			<button
 				type="button"
 				onClick={() => setIsMobileMenuOpen(true)}
-				className="text-primary-foreground hover:text-secondary"
+				className="text-primary-foreground hover:text-secondary transition-colors"
 				aria-label="Abrir menu"
 			>
-				<MenuIcon className="h-6 w-6" />
+				<MenuIcon className="h-7 w-7" />
 				<span className="sr-only">Abrir menu</span>
 			</button>
 		</div>
@@ -111,22 +124,43 @@ export function HeaderMobileToggle() {
 export function HeaderMobileMenu({ children }: { children: ReactNode }) {
 	const { isMobileMenuOpen, setIsMobileMenuOpen } = useHeader();
 
-	if (!isMobileMenuOpen) return null;
-
 	return (
-		<div className="flex flex-col space-y-3 border-t border-secondary/20 bg-primary px-4 pt-2 pb-6 text-center shadow-inner md:hidden">
-			<div className="flex justify-end mb-2">
-				<button
-					type="button"
-					onClick={() => setIsMobileMenuOpen(false)}
-					className="p-2 text-primary-foreground"
-				>
-					<X className="h-6 w-6" />
-					<span className="sr-only">Fechar menu</span>
-				</button>
-			</div>
-			{children}
-		</div>
+		<AnimatePresence>
+			{isMobileMenuOpen && (
+				<>
+					<motion.div
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						exit={{ opacity: 0 }}
+						transition={{ duration: 0.2 }}
+						onClick={() => setIsMobileMenuOpen(false)}
+						className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm lg:hidden"
+					/>
+					
+					<motion.div
+						initial={{ x: "100%" }}
+						animate={{ x: 0 }}
+						exit={{ x: "100%" }}
+						transition={{ type: "spring", damping: 25, stiffness: 200 }}
+						className="fixed top-0 right-0 bottom-0 z-[70] flex w-[80%] max-w-sm flex-col border-l-4 border-secondary bg-primary px-6 py-6 shadow-2xl lg:hidden overflow-y-auto"
+					>
+						<div className="flex justify-end mb-8">
+							<button
+								type="button"
+								onClick={() => setIsMobileMenuOpen(false)}
+								className="p-2 text-primary-foreground hover:text-secondary transition-colors bg-white/5 rounded-full"
+							>
+								<X className="h-6 w-6" />
+								<span className="sr-only">Fechar menu</span>
+							</button>
+						</div>
+						<div className="flex flex-col space-y-5 flex-1">
+							{children}
+						</div>
+					</motion.div>
+				</>
+			)}
+		</AnimatePresence>
 	);
 }
 
@@ -191,12 +225,17 @@ function HeaderInner() {
 					<HeaderLink to="/" hash="ofertas">
 						Explorar
 					</HeaderLink>
-					<HeaderLink to="/auth/login" variant="button">
+					<HeaderLink to="/auth/login" variant="button" className="hidden lg:flex">
 						Entrar
 					</HeaderLink>
 				</HeaderNav>
 
-				<HeaderMobileToggle />
+				<div className="flex items-center gap-4">
+					<HeaderLink to="/auth/login" variant="button" className="lg:hidden">
+						Entrar
+					</HeaderLink>
+					<HeaderMobileToggle />
+				</div>
 			</HeaderContent>
 
 			<HeaderMobileMenu>

@@ -1,9 +1,5 @@
 import type { ColumnDef } from "@tanstack/react-table";
-import { AlertTriangle, Edit, Trash2 } from "lucide-react";
-import {
-	ConhecimentoForm,
-	type ConhecimentoValues,
-} from "#/components/ConhecimentoForm";
+import { AlertTriangle, Trash2, Edit, User } from "lucide-react";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -25,40 +21,56 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "#/components/ui/dialog";
-
-export interface Conhecimento {
-	id: string;
-	titulo: string;
-	descricao: string;
-	categoria: string;
-	nivel: string;
-	pessoaId: string;
-	criadoEm: string;
-}
+import {
+	ConhecimentoForm,
+	type ConhecimentoValues,
+} from "#/components/ConhecimentoForm";
+import { type Conhecimento } from "#/lib/services/conhecimentos.service";
 
 interface ColumnProps {
 	editingConhecimento: Conhecimento | null;
 	setEditingConhecimento: (val: Conhecimento | null) => void;
+	handleEdit: (values: ConhecimentoValues) => Promise<void>;
 	deletingId: string | null;
 	setDeletingId: (val: string | null) => void;
-	handleEdit: (values: ConhecimentoValues) => Promise<void>;
 	handleDelete: () => Promise<void>;
 }
 
 export const getColumns = ({
 	editingConhecimento,
 	setEditingConhecimento,
+	handleEdit,
 	deletingId,
 	setDeletingId,
-	handleEdit,
 	handleDelete,
 }: ColumnProps): ColumnDef<Conhecimento>[] => [
 	{
 		accessorKey: "titulo",
 		header: "Título",
 		cell: ({ row }) => (
-			<div className="font-bold text-primary">{row.getValue("titulo")}</div>
+			<div className="flex flex-col">
+				<span className="font-bold text-primary">{row.getValue("titulo")}</span>
+				<span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">
+					ID: {row.original.id.slice(0, 8)}
+				</span>
+			</div>
 		),
+	},
+	{
+		accessorKey: "pessoa",
+		header: "Criador",
+		cell: ({ row }) => {
+			const pessoa = row.original.pessoa;
+			return (
+				<div className="flex flex-col">
+					<div className="flex items-center gap-1 text-xs font-bold text-foreground">
+						<User size={10} className="text-primary" />
+						{pessoa?.nome || "Membro"}
+					</div>
+					<span className="text-[10px] text-muted-foreground">{pessoa?.email}</span>
+				</div>
+			);
+		},
 	},
 	{
 		accessorKey: "categoria",
@@ -67,7 +79,7 @@ export const getColumns = ({
 			<div className="text-center">
 				<Badge
 					variant="secondary"
-					className="bg-secondary/30 text-primary font-bold text-[10px]"
+					className="bg-secondary/30 text-primary font-bold text-[10px] uppercase"
 				>
 					{row.getValue("categoria")}
 				</Badge>
@@ -83,19 +95,10 @@ export const getColumns = ({
 					variant={
 						row.getValue("nivel") === "AVANCADO" ? "destructive" : "default"
 					}
-					className="text-[10px] font-bold"
+					className="text-[10px] font-bold uppercase"
 				>
 					{row.getValue("nivel")}
 				</Badge>
-			</div>
-		),
-	},
-	{
-		accessorKey: "criadoEm",
-		header: "Criado em",
-		cell: ({ row }) => (
-			<div className="text-muted-foreground text-xs">
-				{new Date(row.getValue("criadoEm")).toLocaleDateString("pt-BR")}
 			</div>
 		),
 	},
@@ -108,7 +111,9 @@ export const getColumns = ({
 				<div className="flex justify-end gap-2">
 					<Dialog
 						open={editingConhecimento?.id === item.id}
-						onOpenChange={(open) => setEditingConhecimento(open ? item : null)}
+						onOpenChange={(open) =>
+							setEditingConhecimento(open ? item : null)
+						}
 					>
 						<DialogTrigger asChild>
 							<Button
@@ -122,10 +127,10 @@ export const getColumns = ({
 						<DialogContent className="sm:max-w-[600px] p-0 overflow-hidden border-2 gap-0">
 							<DialogHeader className="p-6 bg-muted/5 border-b">
 								<DialogTitle className="text-2xl font-extrabold text-primary">
-									Editar Conhecimento
+									Moderação: Editar Conteúdo
 								</DialogTitle>
 								<DialogDescription>
-									Atualize as informações da sua publicação.
+									Alterando conhecimento de <span className="font-bold">{item.pessoa?.nome}</span>.
 								</DialogDescription>
 							</DialogHeader>
 							<div className="p-6">
@@ -133,7 +138,7 @@ export const getColumns = ({
 									initialValues={item as Partial<ConhecimentoValues>}
 									onSubmit={handleEdit}
 									onCancel={() => setEditingConhecimento(null)}
-									buttonText="Salvar Alterações"
+									buttonText="Salvar Como Admin"
 								/>
 							</div>
 						</DialogContent>
@@ -156,15 +161,14 @@ export const getColumns = ({
 							<AlertDialogHeader>
 								<div className="flex items-center gap-2 text-destructive mb-2">
 									<AlertTriangle size={24} />
-									<AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+									<AlertDialogTitle>Remover Conteúdo?</AlertDialogTitle>
 								</div>
 								<AlertDialogDescription className="text-base text-muted-foreground">
-									Esta ação não pode ser desfeita. Isso excluirá permanentemente
-									o conhecimento
+									Como administrador, você está prestes a remover o conhecimento
 									<strong className="text-foreground ml-1">
 										"{item.titulo}"
-									</strong>
-									.
+									</strong>{" "}
+									de <span className="font-bold">{item.pessoa?.nome}</span>.
 								</AlertDialogDescription>
 							</AlertDialogHeader>
 							<AlertDialogFooter className="mt-6">
@@ -176,7 +180,7 @@ export const getColumns = ({
 									variant={"destructive"}
 									className="font-bold"
 								>
-									Sim, excluir
+									Sim, remover
 								</AlertDialogAction>
 							</AlertDialogFooter>
 						</AlertDialogContent>

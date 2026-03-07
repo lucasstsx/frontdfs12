@@ -1,19 +1,38 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { lazy, Suspense } from "react";
+import { conhecimentosLandingQueryOptions } from "#/lib/query-options";
 import { ComoFuncionaSection } from "./-components/ComoFuncionaSection";
-import { ConhecimentosCarrosselSection } from "./-components/ConhecimentosCarrosselSection";
 import { CTASection } from "./-components/CTASection";
 import { HeroSection } from "./-components/HeroSection";
-import { ScrollVelocityBanner } from "./-components/ScrollVelocityBanner";
 
-export const Route = createFileRoute("/_site/")({ component: HomePage });
+const ScrollVelocityBanner = lazy(() =>
+	import("./-components/ScrollVelocityBanner").then((module) => ({
+		default: module.ScrollVelocityBanner,
+	})),
+);
+const ConhecimentosCarrosselSection = lazy(() =>
+	import("./-components/ConhecimentosCarrosselSection").then((module) => ({
+		default: module.ConhecimentosCarrosselSection,
+	})),
+);
+
+export const Route = createFileRoute("/_site/")({
+	loader: ({ context }) =>
+		context.queryClient.ensureQueryData(conhecimentosLandingQueryOptions()),
+	component: HomePage,
+});
 
 function HomePage() {
 	return (
 		<>
 			<HeroSection />
-			<ScrollVelocityBanner />
+			<Suspense fallback={null}>
+				<ScrollVelocityBanner />
+			</Suspense>
 			<ComoFuncionaSection />
-			<ConhecimentosCarrosselSection />
+			<Suspense fallback={null}>
+				<ConhecimentosCarrosselSection />
+			</Suspense>
 			<CTASection />
 		</>
 	);

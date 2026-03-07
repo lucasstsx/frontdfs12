@@ -6,7 +6,8 @@ import {
   useTransform,
   useMotionValue,
   useVelocity,
-  useAnimationFrame
+  useAnimationFrame,
+  useReducedMotion
 } from 'motion/react';
 
 interface VelocityMapping {
@@ -33,6 +34,7 @@ interface ScrollVelocityProps {
   scrollContainerRef?: React.RefObject<HTMLElement>;
   texts: string[];
   velocity?: number;
+  paused?: boolean;
   className?: string;
   damping?: number;
   stiffness?: number;
@@ -65,6 +67,7 @@ export const ScrollVelocity: React.FC<ScrollVelocityProps> = ({
   scrollContainerRef,
   texts = [],
   velocity = 100,
+  paused = false,
   className = '',
   damping = 50,
   stiffness = 400,
@@ -75,6 +78,8 @@ export const ScrollVelocity: React.FC<ScrollVelocityProps> = ({
   parallaxStyle,
   scrollerStyle
 }) => {
+  const shouldReduceMotion = useReducedMotion();
+
   function VelocityText({
     children,
     baseVelocity = velocity,
@@ -120,6 +125,10 @@ export const ScrollVelocity: React.FC<ScrollVelocityProps> = ({
 
     const directionFactor = useRef<number>(1);
     useAnimationFrame((_t, delta) => {
+      if (paused || shouldReduceMotion) {
+        return;
+      }
+
       let moveBy = directionFactor.current * baseVelocity * (delta / 1000);
 
       if (velocityFactor.get() < 0) {
@@ -151,6 +160,10 @@ export const ScrollVelocity: React.FC<ScrollVelocityProps> = ({
         </motion.div>
       </div>
     );
+  }
+
+  if (shouldReduceMotion) {
+    return null;
   }
 
   return (

@@ -1,7 +1,9 @@
 import { useForm } from "@tanstack/react-form";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { FileText, Mail, Phone, Save, User } from "lucide-react";
-import { useState } from "react";
+import { FileText, Loader2, Mail, Phone, Save, User } from "lucide-react";
+import { motion } from "motion/react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { Button } from "#/components/ui/button";
 import {
@@ -18,232 +20,281 @@ import {
 	FieldLabel,
 } from "#/components/ui/field";
 import { Input } from "#/components/ui/input";
-import { Separator } from "#/components/ui/separator";
+import { queryKeys } from "#/lib/query-keys";
+import { profileQueryOptions } from "#/lib/query-options";
+import { authService } from "#/lib/services/auth.service";
 
 const profileSchema = z.object({
 	nome: z.string().min(3, "O nome deve ter pelo menos 3 caracteres"),
 	email: z.string().email("E-mail inválido"),
 	telefone: z.string().min(10, "O telefone deve ter pelo menos 10 dígitos"),
-	bio: z.string().max(160, "A bio deve ter no máximo 160 caracteres").catch(""),
+	descricao: z
+		.string()
+		.max(160, "A bio deve ter no máximo 160 caracteres")
+		.catch(""),
+	novaSenha: z
+		.string()
+		.min(6, "A nova senha deve ter pelo menos 6 caracteres")
+		.catch(""),
 });
 
 export const Route = createFileRoute("/_app/perfil")({
+	loader: ({ context }) => {
+		const user = authService.getUserFromToken();
+		if (!user?.id) {
+			return null;
+		}
+
+		return context.queryClient.ensureQueryData(profileQueryOptions(user.id));
+	},
 	component: UserProfilePage,
 });
 
 function UserProfilePage() {
-	const [isSubmitting, setIsSubmitting] = useState(false);
+	const queryClient = useQueryClient();
+	const userToken = authService.getUserFromToken();
+	const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+	// Busca dados reais do perfil
+	const { data: profile, isLoading } = useQuery({
+		...profileQueryOptions(userToken?.id || ""),
+	});
+
+	const updateMutation = useMutation({
+		mutationFn: (
+			data: Partial<z.infer<typeof profileSchema>> & { senha?: string },
+		) => authService.updateProfile(userToken?.id || "", data),
+		onSuccess: () => {
+			if (userToken?.id) {
+				queryClient.invalidateQueries({
+					queryKey: queryKeys.profile.byId(userToken.id),
+				});
+			}
+			setSuccessMessage("Perfil atualizado com sucesso!");
+			setTimeout(() => setSuccessMessage(null), 3000);
+		},
+	});
 
 	const form = useForm({
 		defaultValues: {
-			nome: "Usuário Teste",
-			email: "usuario@teste.com.br",
-			telefone: "(11) 99999-9999",
-			bio: "Entusiasta de tecnologia e compartilhamento de conhecimentos.",
+			nome: profile?.nome ?? "",
+			email: profile?.email ?? "",
+			telefone: profile?.telefone ?? "",
+			descricao: profile?.descricao ?? "",
+			novaSenha: "",
 		},
 		validators: {
 			onChange: profileSchema,
 		},
 		onSubmit: async ({ value }) => {
-			setIsSubmitting(true);
-			try {
-				console.log("Perfil atualizado:", value);
-				await new Promise((resolve) => setTimeout(resolve, 1500));
-				alert("Perfil atualizado com sucesso!");
-			} catch (error) {
-				console.error("Erro ao atualizar perfil:", error);
-			} finally {
-				setIsSubmitting(false);
+			const { novaSenha, ...rest } = value;
+			const dataToUpdate: Partial<z.infer<typeof profileSchema>> & {
+				senha?: string;
+			} = { ...rest };
+
+			// Se digitou uma nova senha, envia no formato que a API espera
+			if (novaSenha && novaSenha.trim() !== "") {
+				dataToUpdate.senha = novaSenha;
 			}
+
+			updateMutation.mutate(dataToUpdate);
 		},
 	});
 
+	useEffect(() => {
+		if (!profile) {
+			return;
+		}
+
+		form.reset({
+			nome: profile.nome,
+			email: profile.email,
+			telefone: profile.telefone,
+			descricao: profile.descricao ?? "",
+			novaSenha: "",
+		});
+	}, [form, profile]);
+
+	if (isLoading) {
+		return (
+			<div className="flex items-center justify-center min-h-[400px]">
+				<Loader2 className="h-8 w-8 animate-spin text-primary" />
+			</div>
+		);
+	}
+
 	return (
-		<div className="container mx-auto px-4 py-8 max-w-3xl">
+		<motion.div
+			initial={{ opacity: 0, y: 20 }}
+			animate={{ opacity: 1, y: 0 }}
+			transition={{ duration: 0.5 }}
+			className="container mx-auto px-4 py-12 max-w-3xl"
+		>
 			<div className="flex flex-col gap-8">
-				<div className="flex flex-col gap-2 text-center md:text-left">
+				<div className="flex flex-col gap-2">
 					<h1 className="text-4xl font-extrabold text-primary tracking-tight">
 						Meu Perfil
 					</h1>
-					<p className="text-muted-foreground text-lg italic">
-						Gerencie suas informações pessoais e como você aparece para a
-						comunidade.
+					<p className="text-muted-foreground text-lg">
+						Gerencie suas informações pessoais e como as pessoas veem você.
 					</p>
 				</div>
 
-				<Card className="border-2 shadow-sm overflow-hidden gap-0">
-					<CardHeader className=" border-b pb-6">
-						<div className="flex flex-col gap-1 text-center md:text-left">
-							<CardTitle className="text-2xl font-bold text-primary">
-								Configurações da Conta
-							</CardTitle>
-							<CardDescription className="text-base">
-								Membro desde Março de 2024
-							</CardDescription>
+				<Card className="border-2 shadow-xl overflow-hidden">
+					<CardHeader className="bg-muted/5 border-b border-secondary/10 pb-8 pt-8 px-8">
+						<div className="flex flex-col md:flex-row items-center gap-6">
+							<div className="h-24 w-24 rounded-full bg-primary flex items-center justify-center text-white shadow-inner">
+								<User size={48} />
+							</div>
+							<div className="text-center md:text-left flex-1">
+								<CardTitle className="text-3xl font-extrabold text-primary">
+									{profile?.nome}
+								</CardTitle>
+								<CardDescription className="text-base font-medium mt-1">
+									Membro desde{" "}
+									{profile
+										? new Date(profile.criadoEm).toLocaleDateString("pt-BR")
+										: ""}
+								</CardDescription>
+							</div>
 						</div>
 					</CardHeader>
-					<CardContent className="p-6 md:p-8">
+					<CardContent className="p-8">
+						{successMessage && (
+							<div className="mb-6 p-4 rounded-xl bg-emerald-500/10 border-2 border-emerald-500/20 text-emerald-600 font-bold flex items-center gap-3">
+								<Save size={20} />
+								{successMessage}
+							</div>
+						)}
+
 						<form
 							onSubmit={(e) => {
 								e.preventDefault();
 								e.stopPropagation();
 								form.handleSubmit();
 							}}
-							className="space-y-6"
 						>
-							<FieldGroup className="gap-6">
-								<form.Field name="nome">
-									{(field) => (
-										<Field>
-											<div className="flex items-center gap-2 mb-2">
-												<User size={18} className="text-primary" />
-												<FieldLabel
-													htmlFor={field.name}
-													className="font-bold text-primary"
-												>
-													Nome Completo
-												</FieldLabel>
-											</div>
-											<Input
-												id={field.name}
-												name={field.name}
-												value={field.state.value}
-												onBlur={field.handleBlur}
-												onChange={(e) => field.handleChange(e.target.value)}
-												className="h-12 border-2   bg-white!"
-												placeholder="Como você quer ser chamado?"
-											/>
-											{field.state.meta.errors.length > 0 && (
-												<FieldError errors={field.state.meta.errors} />
-											)}
-										</Field>
-									)}
-								</form.Field>
-
-								<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-									<form.Field name="email">
+							<FieldGroup className="gap-8">
+								<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+									<form.Field name="nome">
 										{(field) => (
 											<Field>
-												<div className="flex items-center gap-2 mb-2">
-													<Mail size={18} className="text-primary" />
-													<FieldLabel
-														htmlFor={field.name}
-														className="font-bold text-primary"
-													>
-														E-mail
-													</FieldLabel>
-												</div>
+												<FieldLabel className="text-primary font-bold flex items-center gap-2">
+													<User size={16} />
+													Nome Completo
+												</FieldLabel>
 												<Input
-													id={field.name}
-													name={field.name}
-													type="email"
 													value={field.state.value}
 													onBlur={field.handleBlur}
 													onChange={(e) => field.handleChange(e.target.value)}
-													className="h-12 border-2   bg-white!"
-													placeholder="seu@email.com"
+													className="bg-white! py-6 font-medium"
 												/>
-												{field.state.meta.errors.length > 0 && (
-													<FieldError errors={field.state.meta.errors} />
-												)}
+												<FieldError errors={field.state.meta.errors} />
 											</Field>
 										)}
 									</form.Field>
 
-									<form.Field name="telefone">
+									<form.Field name="email">
 										{(field) => (
 											<Field>
-												<div className="flex items-center gap-2 mb-2">
-													<Phone size={18} className="text-primary" />
-													<FieldLabel
-														htmlFor={field.name}
-														className="font-bold text-primary"
-													>
-														Telefone
-													</FieldLabel>
-												</div>
+												<FieldLabel className="text-primary font-bold flex items-center gap-2">
+													<Mail size={16} />
+													E-mail
+												</FieldLabel>
 												<Input
-													id={field.name}
-													name={field.name}
-													type="tel"
+													type="email"
 													value={field.state.value}
 													onBlur={field.handleBlur}
 													onChange={(e) => field.handleChange(e.target.value)}
-													className="h-12 border-2   bg-white!"
-													placeholder="(00) 00000-0000"
+													className="bg-white! py-6 font-medium"
+													disabled
 												/>
-												{field.state.meta.errors.length > 0 && (
-													<FieldError errors={field.state.meta.errors} />
-												)}
+												<FieldError errors={field.state.meta.errors} />
 											</Field>
 										)}
 									</form.Field>
 								</div>
 
-								<form.Field name="bio">
+								<form.Field name="telefone">
 									{(field) => (
 										<Field>
-											<div className="flex items-center gap-2 mb-2">
-												<FileText size={18} className="text-primary" />
-												<FieldLabel
-													htmlFor={field.name}
-													className="font-bold text-primary"
-												>
-													Bio (Descrição)
-												</FieldLabel>
-											</div>
-											<textarea
-												id={field.name}
-												name={field.name}
+											<FieldLabel className="text-primary font-bold flex items-center gap-2">
+												<Phone size={16} />
+												Telefone
+											</FieldLabel>
+											<Input
 												value={field.state.value}
 												onBlur={field.handleBlur}
 												onChange={(e) => field.handleChange(e.target.value)}
-												className="flex min-h-[120px] w-full rounded-md border-2 border-input bg-white! px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2   focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-												placeholder="Conte um pouco sobre você..."
+												className="bg-white! py-6 font-medium"
 											/>
-											<div className="flex justify-between mt-1">
-												<p className="text-xs text-muted-foreground italic">
-													Esta informação será visível para outros usuários.
-												</p>
-												{field.state.meta.errors.length > 0 && (
-													<FieldError errors={field.state.meta.errors} />
-												)}
-											</div>
+											<FieldError errors={field.state.meta.errors} />
 										</Field>
 									)}
 								</form.Field>
-							</FieldGroup>
 
-							<Separator className="my-8 bg-primary/10" />
-
-							<div className="flex flex-col sm:flex-row justify-end gap-4">
-								<Button
-									type="button"
-									variant="outline"
-									className="font-bold px-8 border-2"
-									onClick={() => form.reset()}
-								>
-									Descartar Alterações
-								</Button>
-								<Button
-									type="submit"
-									disabled={isSubmitting}
-									className="font-bold px-8 shadow-lg hover:scale-105 transition-all"
-								>
-									{isSubmitting ? (
-										"Salvando..."
-									) : (
-										<span className="flex items-center gap-2">
-											<Save size={18} />
-											Salvar Perfil
-										</span>
+								<form.Field name="descricao">
+									{(field) => (
+										<Field>
+											<FieldLabel className="text-primary font-bold flex items-center gap-2">
+												<FileText size={16} />
+												Biografia
+											</FieldLabel>
+											<textarea
+												value={field.state.value}
+												onBlur={field.handleBlur}
+												onChange={(e) => field.handleChange(e.target.value)}
+												className="flex min-h-[120px] w-full rounded-xl border-2 border-input bg-white! px-4 py-3 text-sm font-medium ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all"
+												placeholder="Escreva um pouco sobre sua trajetória..."
+											/>
+											<FieldError errors={field.state.meta.errors} />
+										</Field>
 									)}
-								</Button>
-							</div>
+								</form.Field>
+
+								<form.Field name="novaSenha">
+									{(field) => (
+										<Field>
+											<FieldLabel className="text-primary font-bold flex items-center gap-2">
+												Alterar Senha
+											</FieldLabel>
+											<Input
+												type="password"
+												value={field.state.value}
+												onBlur={field.handleBlur}
+												onChange={(e) => field.handleChange(e.target.value)}
+												className="bg-white! py-6 font-medium"
+												placeholder="Deixe em branco para manter a atual..."
+											/>
+											<FieldError errors={field.state.meta.errors} />
+										</Field>
+									)}
+								</form.Field>
+
+								<div className="pt-4 border-t border-secondary/10">
+									<Button
+										type="submit"
+										className="w-full md:w-auto px-12 py-7 rounded-xl font-bold text-lg shadow-lg hover:scale-105 transition-all"
+										disabled={updateMutation.isPending}
+									>
+										{updateMutation.isPending ? (
+											<span className="flex items-center gap-2">
+												<Loader2 size={20} className="animate-spin" />
+												Salvando...
+											</span>
+										) : (
+											<span className="flex items-center gap-2">
+												<Save size={20} />
+												Salvar Perfil
+											</span>
+										)}
+									</Button>
+								</div>
+							</FieldGroup>
 						</form>
 					</CardContent>
 				</Card>
 			</div>
-		</div>
+		</motion.div>
 	);
 }

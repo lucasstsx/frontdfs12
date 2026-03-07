@@ -1,5 +1,6 @@
 import { useForm } from "@tanstack/react-form";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { Button } from "#/components/ui/button";
@@ -20,10 +21,12 @@ import {
 } from "#/components/ui/field";
 import { Input } from "#/components/ui/input";
 import { cn } from "#/lib/utils";
+import { authService, type LoginResponse } from "#/lib/services/auth.service";
+import { AlertCircle, Loader2 } from "lucide-react";
 
 const loginSchema = z.object({
-	email: z.email("E-mail inválido"),
-	password: z.string(),
+	email: z.string().email("E-mail inválido"),
+	senha: z.string().min(1, "A senha é obrigatória"),
 });
 
 export function LoginForm({
@@ -31,27 +34,34 @@ export function LoginForm({
 	...props
 }: React.ComponentProps<"div">) {
 	const navigate = useNavigate();
-	const [isSubmitting, setIsSubmitting] = useState(false);
+	const search = useSearch({ from: "/auth/_auth/login" }) as { redirect?: string };
+	const [error, setError] = useState<string | null>(null);
+
+	const loginMutation = useMutation<LoginResponse, any, z.infer<typeof loginSchema>>({
+		mutationFn: (credentials) => authService.login(credentials),
+		onSuccess: (data) => {
+			authService.setToken(data.token);
+			const target = search.redirect || "/conhecimentos";
+			const safeTarget = target.startsWith("/") ? target : "/conhecimentos";
+			navigate({ to: safeTarget as any });
+		},
+		onError: (err: any) => {
+			const message = err.response?.data?.message || "E-mail ou senha inválidos.";
+			setError(message);
+		},
+	});
 
 	const form = useForm({
 		defaultValues: {
 			email: "",
-			password: "",
+			senha: "",
 		},
 		validators: {
 			onChange: loginSchema,
 		},
 		onSubmit: async ({ value }) => {
-			setIsSubmitting(true);
-			try {
-				console.log("Login realizado com sucesso!", value);
-				await new Promise((resolve) => setTimeout(resolve, 1000));
-				navigate({ to: "/" });
-			} catch (error) {
-				console.error("Erro no login:", error);
-			} finally {
-				setIsSubmitting(false);
-			}
+			setError(null);
+			loginMutation.mutate(value);
 		},
 	});
 
@@ -67,6 +77,13 @@ export function LoginForm({
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
+					{error && (
+						<div className="mb-6 p-4 rounded-xl bg-destructive/10 border-2 border-destructive/20 text-destructive flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+							<AlertCircle size={20} />
+							<p className="text-sm font-bold">{error}</p>
+						</div>
+					)}
+
 					<form
 						onSubmit={(e) => {
 							e.preventDefault();
@@ -187,7 +204,7 @@ export function LoginForm({
 								}}
 							</form.Field>
 
-							<form.Field name="password">
+							<form.Field name="senha">
 								{(field) => {
 									const isInvalid =
 										field.state.meta.isTouched && !field.state.meta.isValid;
@@ -227,8 +244,15 @@ export function LoginForm({
 							</form.Field>
 
 							<Field>
-								<Button type="submit" disabled={isSubmitting}>
-									{isSubmitting ? "Entrando..." : "Login"}
+								<Button type="submit" disabled={loginMutation.isPending}>
+									{loginMutation.isPending ? (
+										<>
+											<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+											Entrando...
+										</>
+									) : (
+										"Login"
+									)}
 								</Button>
 								<FieldDescription className="text-center">
 									Não possui uma conta?{" "}

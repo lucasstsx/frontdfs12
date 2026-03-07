@@ -1,11 +1,13 @@
 import axios from "axios";
 
+export const AUTH_UNAUTHORIZED_EVENT = "auth:unauthorized";
+
 /**
  * Instância do Axios para comunicação com o backend.
  * O backend roda localmente por padrão.
  */
 export const api = axios.create({
-	baseURL: import.meta.env.VITE_API_URL || "http://localhost:8080/api",
+	baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000/api",
 	timeout: 10000,
 	headers: {
 		"Content-Type": "application/json",
@@ -34,7 +36,7 @@ api.interceptors.response.use(
 			// Se o token expirou ou é inválido, limpa o localStorage e redireciona
 			localStorage.removeItem("token");
 			if (typeof window !== "undefined") {
-				window.location.href = "/auth/login";
+				window.dispatchEvent(new Event(AUTH_UNAUTHORIZED_EVENT));
 			}
 		}
 		return Promise.reject(error);

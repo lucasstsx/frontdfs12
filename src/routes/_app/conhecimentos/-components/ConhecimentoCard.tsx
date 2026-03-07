@@ -10,22 +10,12 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "#/components/ui/dialog";
+import type { Conhecimento as ApiConhecimento } from "#/lib/services/conhecimentos.service";
 import { cn } from "#/lib/utils";
 
-export interface Conhecimento {
-	id: string;
-	titulo: string;
-	descricao: string;
-	categoria: "MUSICA" | "TECNOLOGIA" | "EDUCACAO" | "ARTES" | "IDIOMAS" | "OUTROS";
-	nivel: "BASICO" | "INTERMEDIARIO" | "AVANCADO";
-	pessoa: {
-		id: string;
-		nome: string;
-		email: string;
-		telefone: string;
-	};
-	criadoEm: string;
-}
+export type Conhecimento = ApiConhecimento & {
+	pessoa: NonNullable<ApiConhecimento["pessoa"]>;
+};
 
 interface ConhecimentoCardProps {
 	item: Conhecimento;
@@ -47,7 +37,8 @@ export function ConhecimentoCard({ item }: ConhecimentoCardProps) {
 						className={cn(
 							"font-bold uppercase tracking-wider",
 							item.nivel === "BASICO" && "bg-emerald-500 hover:bg-emerald-600",
-							item.nivel === "INTERMEDIARIO" && "bg-amber-500 hover:bg-amber-600",
+							item.nivel === "INTERMEDIARIO" &&
+								"bg-amber-500 hover:bg-amber-600",
 						)}
 					>
 						{item.nivel}
@@ -72,7 +63,8 @@ export function ConhecimentoCard({ item }: ConhecimentoCardProps) {
 						</div>
 						<div className="flex items-center gap-2 text-xs text-muted-foreground">
 							<Calendar size={14} />
-							Publicado em: {new Date(item.criadoEm).toLocaleDateString("pt-BR")}
+							Publicado em:{" "}
+							{new Date(item.criadoEm).toLocaleDateString("pt-BR")}
 						</div>
 					</div>
 
@@ -92,7 +84,9 @@ export function ConhecimentoCard({ item }: ConhecimentoCardProps) {
 										{item.categoria}
 									</Badge>
 									<Badge
-										variant={item.nivel === "AVANCADO" ? "destructive" : "default"}
+										variant={
+											item.nivel === "AVANCADO" ? "destructive" : "default"
+										}
 										className={cn(
 											"font-bold uppercase tracking-wider",
 											item.nivel === "BASICO" && "bg-emerald-500",
@@ -159,7 +153,8 @@ export function ConhecimentoCard({ item }: ConhecimentoCardProps) {
 
 								<div className="pt-2">
 									<p className="text-[10px] text-center text-muted-foreground italic">
-										Publicado em {new Date(item.criadoEm).toLocaleDateString("pt-BR")}
+										Publicado em{" "}
+										{new Date(item.criadoEm).toLocaleDateString("pt-BR")}
 									</p>
 								</div>
 							</div>

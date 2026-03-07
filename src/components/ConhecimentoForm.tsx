@@ -1,6 +1,5 @@
 import { useForm } from "@tanstack/react-form";
 import { Loader2, Save } from "lucide-react";
-import { useState } from "react";
 import { z } from "zod";
 import { Button } from "#/components/ui/button";
 import {
@@ -41,9 +40,10 @@ export type ConhecimentoValues = z.infer<typeof conhecimentoSchema>;
 
 interface ConhecimentoFormProps {
 	initialValues?: Partial<ConhecimentoValues>;
-	onSubmit: (values: ConhecimentoValues) => Promise<void>;
-	onCancel: () => void;
+	onSubmit: (values: ConhecimentoValues) => Promise<void> | void;
+	onCancel?: () => void;
 	buttonText?: string;
+	isSubmitting?: boolean;
 }
 
 export function ConhecimentoForm({
@@ -51,9 +51,8 @@ export function ConhecimentoForm({
 	onSubmit,
 	onCancel,
 	buttonText = "Salvar Conhecimento",
+	isSubmitting = false,
 }: ConhecimentoFormProps) {
-	const [isSubmitting, setIsSubmitting] = useState(false);
-
 	const form = useForm({
 		defaultValues: {
 			titulo: initialValues?.titulo ?? "",
@@ -65,12 +64,7 @@ export function ConhecimentoForm({
 			onChange: conhecimentoSchema,
 		},
 		onSubmit: async ({ value }) => {
-			setIsSubmitting(true);
-			try {
-				await onSubmit(value as ConhecimentoValues);
-			} finally {
-				setIsSubmitting(false);
-			}
+			await onSubmit(value as ConhecimentoValues);
 		},
 	});
 
