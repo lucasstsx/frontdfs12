@@ -1,12 +1,20 @@
-import { createRootRoute, Outlet } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
-
-import { Header } from "../components/Header";
+import type { QueryClient } from "@tanstack/react-query";
+import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
+import { lazy, Suspense } from "react";
 import "../styles.css";
-import { Footer } from "#/components/Footer";
-import {NotFound} from "#/components/NotFound";
+import { NotFound } from "#/components/NotFound";
 
-export const Route = createRootRoute({
+const TanStackRouterDevtools = import.meta.env.DEV
+	? lazy(() =>
+			import("@tanstack/react-router-devtools").then((module) => ({
+				default: module.TanStackRouterDevtools,
+			})),
+		)
+	: null;
+
+export const Route = createRootRouteWithContext<{
+	queryClient: QueryClient;
+}>()({
 	head: () => ({
 		meta: [
 			{
@@ -14,10 +22,8 @@ export const Route = createRootRoute({
 				content:
 					"Uma plataforma de compartilhamento de conhecimentos e experiências, onde as pessoas podem se conectar, aprender e crescer juntas.",
 			},
-			{
-				title: "PessoaS2onhecimentos",
-			},
 		],
+		title: "PessoaS2onhecimentos",
 		links: [
 			{
 				rel: "icon",
@@ -32,15 +38,12 @@ export const Route = createRootRoute({
 function RootComponent() {
 	return (
 		<>
-			<div className="min-h-screen flex flex-col bg-(--background) text-(--foreground)">
-				<Header />
-
-				<main className="flex-1 px-4 py-10 sm:px-6 lg:px-8">
-					<Outlet />
-				</main>
-			</div>
-			<Footer>footer</Footer>
-			<TanStackRouterDevtools />
+			<Outlet />
+			{TanStackRouterDevtools ? (
+				<Suspense fallback={null}>
+					<TanStackRouterDevtools />
+				</Suspense>
+			) : null}
 		</>
 	);
 }
