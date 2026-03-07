@@ -1,9 +1,15 @@
 import { Link } from "@tanstack/react-router";
 import { MenuIcon, X } from "lucide-react";
-import { createContext, type ReactNode, useContext, useState, useEffect } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import {
+	createContext,
+	type ReactNode,
+	useContext,
+	useEffect,
+	useState,
+} from "react";
 import { cn } from "#/lib/utils";
 import { Logo } from "./Logo";
-import { motion, AnimatePresence } from "motion/react";
 
 // contexto para gerenciar o estado do menu mobile entre os subcomponentes
 const HeaderContext = createContext<{
@@ -136,7 +142,7 @@ export function HeaderMobileMenu({ children }: { children: ReactNode }) {
 						onClick={() => setIsMobileMenuOpen(false)}
 						className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm lg:hidden"
 					/>
-					
+
 					<motion.div
 						initial={{ x: "100%" }}
 						animate={{ x: 0 }}
@@ -154,9 +160,7 @@ export function HeaderMobileMenu({ children }: { children: ReactNode }) {
 								<span className="sr-only">Fechar menu</span>
 							</button>
 						</div>
-						<div className="flex flex-col space-y-5 flex-1">
-							{children}
-						</div>
+						<div className="flex flex-col space-y-5 flex-1">{children}</div>
 					</motion.div>
 				</>
 			)}
@@ -225,17 +229,16 @@ function HeaderInner() {
 					<HeaderLink to="/" hash="ofertas">
 						Explorar
 					</HeaderLink>
-					<HeaderLink to="/auth/login" variant="button" className="hidden lg:flex">
+					<HeaderLink
+						to="/auth/login"
+						variant="button"
+						className="hidden lg:flex"
+					>
 						Entrar
 					</HeaderLink>
 				</HeaderNav>
 
-				<div className="flex items-center gap-4">
-					<HeaderLink to="/auth/login" variant="button" className="lg:hidden">
-						Entrar
-					</HeaderLink>
-					<HeaderMobileToggle />
-				</div>
+				<HeaderMobileToggle />
 			</HeaderContent>
 
 			<HeaderMobileMenu>
