@@ -2,6 +2,7 @@ import type { QueryClient } from "@tanstack/react-query";
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 import { lazy, Suspense } from "react";
 import "../styles.css";
+import { NotFound } from "#/components/NotFound";
 
 const TanStackRouterDevtools = import.meta.env.DEV
 	? lazy(() =>
@@ -31,6 +32,7 @@ export const Route = createRootRouteWithContext<{
 		],
 	}),
 	component: RootComponent,
+	notFoundComponent: NotFound,
 });
 
 function RootComponent() {
