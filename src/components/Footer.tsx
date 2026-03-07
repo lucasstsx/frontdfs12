@@ -22,7 +22,7 @@ const socialLinks = [
 
 export function Footer() {
 	return (
-		<footer className="bg-primary px-8 py-10 text-primary-foreground border-t-4 border-destructive">
+		<footer className="bg-primary px-8 py-10 text-primary-foreground border-t-4 border-accent">
 			<div className="mx-auto grid max-w-5xl gap-10 sm:grid-cols-[1fr_auto_auto] lg:gap-16">
 				<div className="flex flex-col gap-4">
 					<div className="items-center gap-3 flex">
@@ -35,7 +35,7 @@ export function Footer() {
 				</div>
 
 				<div className="flex flex-col gap-3">
-					<h4 className="mb-1 text-sm font-bold uppercase tracking-widest text-destructive">
+					<h4 className="mb-1 text-sm font-bold uppercase tracking-widest text-accent">
 						Plataforma
 					</h4>
 					{platformLinks.map((link) =>
@@ -61,7 +61,7 @@ export function Footer() {
 				</div>
 
 				<div className="flex flex-col gap-3">
-					<h4 className="mb-1 text-sm font-bold uppercase tracking-widest text-destructive">
+					<h4 className="mb-1 text-sm font-bold uppercase tracking-widest text-accent">
 						Nossas Redes
 					</h4>
 					<div className="flex gap-3">

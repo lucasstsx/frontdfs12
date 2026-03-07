@@ -133,7 +133,7 @@ export function HeaderMobileMenu({ children }: { children: ReactNode }) {
 // Link simples pra consistência de estilo entre links normais e botões
 export function HeaderLink({
 	to,
-	href,
+	hash,
 	children,
 	variant = "link",
 	onClick,
@@ -141,7 +141,7 @@ export function HeaderLink({
 	...props
 }: {
 	to?: string;
-	href?: string;
+	hash?: string;
 	children: ReactNode;
 	variant?: "link" | "button";
 	onClick?: () => void;
@@ -150,37 +150,47 @@ export function HeaderLink({
 }) {
 	const baseClassName =
 		variant === "button"
-			? "bg-destructive hover:brightness-90 text-white px-6 py-2.5 rounded-lg font-bold transition-transform hover:scale-105 shadow-md inline-block"
+			? "bg-accent hover:brightness-90 text-white px-6 py-2.5 rounded-lg font-bold transition-transform hover:scale-105 shadow-md inline-block"
 			: "text-background hover:text-secondary transition-colors font-medium text-sm lg:text-base";
 
 	const combinedClassName = cn(baseClassName, className);
 
-	if (href) {
-		return (
-			<a href={href} className={combinedClassName} onClick={onClick} {...props}>
-				{children}
-			</a>
-		);
-	}
-
 	return (
-		<Link to={to} className={combinedClassName} onClick={onClick} {...props}>
+		<Link
+			to={to}
+			hash={hash}
+			className={combinedClassName}
+			onClick={onClick}
+			hashScrollIntoView={true}
+			{...props}
+		>
 			{children}
 		</Link>
 	);
 }
 
-// mantendo o Header original como "Padrão"
-export function Header() {
+function HeaderInner() {
+	const { setIsMobileMenuOpen } = useHeader();
+
+	const handleLinkClick = () => {
+		setIsMobileMenuOpen(false);
+	};
+
 	return (
-		<HeaderRoot>
+		<>
 			<HeaderContent>
 				<HeaderLogo />
 
 				<HeaderNav>
-					<HeaderLink href="#inicio">Início</HeaderLink>
-					<HeaderLink href="#como-funciona">Como Funciona</HeaderLink>
-					<HeaderLink href="#ofertas">Explorar</HeaderLink>
+					<HeaderLink to="/" hash="inicio">
+						Início
+					</HeaderLink>
+					<HeaderLink to="/" hash="como-funciona">
+						Como Funciona
+					</HeaderLink>
+					<HeaderLink to="/" hash="ofertas">
+						Explorar
+					</HeaderLink>
 					<HeaderLink to="/auth/login" variant="button">
 						Entrar
 					</HeaderLink>
@@ -190,19 +200,28 @@ export function Header() {
 			</HeaderContent>
 
 			<HeaderMobileMenu>
-				<HeaderLink to="/" hash="inicio">
+				<HeaderLink to="/" hash="inicio" onClick={handleLinkClick}>
 					Início
 				</HeaderLink>
-				<HeaderLink to="/" hash="como-funciona">
+				<HeaderLink to="/" hash="como-funciona" onClick={handleLinkClick}>
 					Como Funciona
 				</HeaderLink>
-				<HeaderLink to="/" hash="ofertas">
+				<HeaderLink to="/" hash="ofertas" onClick={handleLinkClick}>
 					Explorar
 				</HeaderLink>
-				<HeaderLink to="/auth/login" variant="button">
+				<HeaderLink to="/auth/login" variant="button" onClick={handleLinkClick}>
 					Entrar
 				</HeaderLink>
 			</HeaderMobileMenu>
+		</>
+	);
+}
+
+// mantendo o Header original como "Padrão"
+export function Header() {
+	return (
+		<HeaderRoot>
+			<HeaderInner />
 		</HeaderRoot>
 	);
 }

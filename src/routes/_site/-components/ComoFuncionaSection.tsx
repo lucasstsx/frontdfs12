@@ -58,7 +58,10 @@ export function ComoFuncionaSection() {
 						initial={{ opacity: 0, y: 20 }}
 						whileInView={{ opacity: 1, y: 0 }}
 						viewport={{ once: true }}
-						transition={{ duration: 0.5, delay: Number.parseInt(step.number, 10) * 0.1 }}
+						transition={{
+							duration: 0.5,
+							delay: Number.parseInt(step.number, 10) * 0.1,
+						}}
 					>
 						<span className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-0.5 text-xs font-bold text-primary-foreground">
 							{step.number}

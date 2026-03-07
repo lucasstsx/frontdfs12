@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { Footer } from "#/components/Footer";
 import {
 	HeaderActions,
 	HeaderContent,
@@ -25,10 +26,11 @@ function AuthLayout() {
 			</HeaderRoot>
 
 			<main className="flex-1 flex items-center justify-center p-4">
-				<div className="w-full h-full flex items-center justify-center">
+				<div className="w-full h-full sm:p-12 md:p-24 container flex items-center justify-center">
 					<Outlet />
 				</div>
 			</main>
+			<Footer></Footer>
 		</div>
 	);
 }
