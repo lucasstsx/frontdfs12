@@ -17,7 +17,7 @@ export function Logo({ className }: LogoProps) {
 				<span className="relative mx-[-2px] flex h-6 w-6 sm:h-8 sm:w-8 translate-y-[3px] items-center justify-center overflow-visible">
 					<svg
 						viewBox="1028 307 768 698"
-						className="absolute h-full w-full scale-125 text-destructive transition-all duration-300 ease-in-out group-hover:scale-50 group-hover:opacity-0"
+						className="absolute h-full w-full scale-125 text-accent transition-all duration-300 ease-in-out group-hover:scale-50 group-hover:opacity-0"
 						xmlns="http://www.w3.org/2000/svg"
 						aria-hidden="true"
 					>
@@ -30,8 +30,8 @@ export function Logo({ className }: LogoProps) {
 							d=" M1448.666504,948.642883 C1436.140015,961.034973 1424.117188,972.933716 1411.492310,985.428345 C1355.339600,930.021179 1299.985107,875.401550 1244.630493,820.781921 C1244.922974,820.315430 1245.215332,819.848999 1245.507690,819.382507 C1251.949707,820.383789 1258.393677,821.372559 1264.833374,822.388855 C1283.559326,825.343872 1302.097656,823.887146 1320.315552,819.192017 C1326.338745,817.639709 1330.203735,819.031616 1334.437134,823.245239 C1357.350342,846.051147 1380.507324,868.612183 1403.592285,891.245239 C1405.953003,893.559753 1408.393311,895.793030 1411.377319,898.612671 C1414.052124,896.168518 1416.519043,894.052124 1418.832275,891.779236 C1441.655640,869.352051 1464.606201,847.050476 1487.145996,824.341370 C1492.478271,818.968933 1497.281982,817.515259 1504.786743,819.388428 C1526.347290,824.770142 1548.209961,825.911438 1570.094360,820.700989 C1571.706665,820.317078 1573.374634,820.121826 1575.028809,819.982727 C1575.598999,819.934753 1576.206055,820.324829 1578.319458,821.005066 C1534.912964,863.737671 1492.041626,905.943542 1448.666504,948.642883 z"
 						/>
 					</svg>
-					<span className="heart-pulse absolute flex items-center justify-center text-destructive opacity-0 transition-all duration-300 ease-in-out group-hover:scale-125 group-hover:opacity-100">
-						<Heart size={20} aria-hidden="true" className="fill-destructive" />
+					<span className="heart-pulse absolute flex items-center justify-center text-accent opacity-0 transition-all duration-300 ease-in-out group-hover:scale-125 group-hover:opacity-100">
+						<Heart size={20} aria-hidden="true" className="fill-accent" />
 					</span>
 				</span>
 				<span className="text-secondary transition-colors group-hover:text-primary-foreground">
